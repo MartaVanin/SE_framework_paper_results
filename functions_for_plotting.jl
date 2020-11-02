@@ -94,12 +94,58 @@ function compare_errors(plt, df, formulation, criterion, index; yaxis_lim=Inf, r
 
     max_or_avg == "Max." ? yax = :err_max : yax = :err_avg
 
-    scatter!(df.n_bus, df[yax], label = formulation, markercolor = clr,
+    scatter!(df.n_bus, df[yax], label = criterion, markercolor = clr,
                 markershape = mrkshp, xaxis = "Number of feeder buses [-]",
                 yaxis = " Error [p.u.]", ylims = [0, yaxis_lim],
-                title = "$(max_or_avg) absolute error", legend=:topleft )
+                title = "$(max_or_avg) absolute error", legend=:bottomleft )
+end
+
+function compare_errors_compact(plt, df; yaxis_lim=Inf)
+
+    mrkshp_list = [:circle, :X]
+    clr_list = [:blue, :orange]
+
+    scatter!(df.n_bus, df[:err_avg], label = "Average error", markercolor = clr_list[1],
+                markershape = mrkshp_list[1], xaxis = "Number of feeder buses [-]",
+                yaxis = " Error [p.u.]", ylims = [0, yaxis_lim],
+                title = "Error - any formulation, any criterion", legend=:topright )
+    scatter!(df.n_bus, df[:err_max], label = "Maximum error", markercolor = clr_list[2],
+                markershape = mrkshp_list[2], xaxis = "Number of feeder buses [-]",
+                yaxis = " Error [p.u.]", ylims = [0, yaxis_lim],
+                title = "Error - any formulation, any criterion", legend=:topright )
+
 end
 
 function save_pdf_current_plot(plot_name::String="unknown_plot")
     savefig(joinpath(@__DIR__, "result_files\\plots\\")*plot_name*".pdf")
+end
+
+function calculate_unbalance(pf_result)
+    a = exp(im*2*π/3)
+    are = real(a)
+    aim = imag(a)
+    a2re = real(a^2)
+    a2im = imag(a^2)
+
+    vuf = []
+    for (b, bus) in pf_result["solution"]["bus"]
+
+        (vm_a, vm_b, vm_c) = [bus["vm"][i] for i in 1:3]
+        (va_a, va_b, va_c) = [bus["va"][i] for i in 1:3]
+
+        v_real_pos = (vm_a*cos(va_a) + are*vm_b*cos(va_b) - aim*vm_b*sin(va_b) + a2re*vm_c*cos(va_c) - a2im*vm_c*sin(va_c))/3
+        v_imag_pos =  (vm_a*sin(va_a) + are*vm_b*sin(va_b) + aim*vm_b*cos(va_b) + a2re*vm_c*sin(va_c) + a2im*vm_c*cos(va_c))/3
+
+        vm_pos = sqrt.(v_real_pos.^2+v_imag_pos.^2)
+
+        v_real_neg = (vm_a*cos(va_a) + a2re*vm_b*cos(va_b) - a2im*vm_b*sin(va_b) + are*vm_c*cos(va_c) - aim*vm_c*sin(va_c))/3
+
+        v_imag_neg = (vm_a*sin(va_a) + a2re*vm_b*sin(va_b) + a2im*vm_b*cos(va_b) + are*vm_c*sin(va_c) + aim*vm_c*cos(va_c))/3
+
+        vm_neg = sqrt.(v_real_neg.^2+v_imag_neg.^2)
+
+        push!(vuf, (parse(Int64, b), vm_neg/vm_pos*100))
+
+    end
+    return vuf #[%]
 end
