@@ -24,10 +24,9 @@ function build_mc_selin(pm::PowerModelsSE.ReducedIVRPowerModel)
      PowerModelsDistribution.variable_mc_bus_voltage(pm, bounded = false)
      PowerModelsSE.variable_mc_branch_current(pm, bounded = true)
      PowerModelsSE.variable_mc_gen_power_setpoint_se(pm, bounded = true)
-     PowerModelsSE.variable_mc_load_current(pm, bounded = true)#TODO bug in the bounds assignment
+     PowerModelsSE.variable_mc_load_current(pm, bounded = true)
      PowerModelsSE.variable_mc_residual(pm, bounded = true)
      PowerModelsSE.variable_mc_measurement(pm, bounded = true)
-     #variable_mc_measurementlin(pm, bounded = true)
 
     # Constraints
     for (i,bus) in PowerModelsDistribution.ref(pm, :ref_buses)
@@ -50,7 +49,6 @@ function build_mc_selin(pm::PowerModelsSE.ReducedIVRPowerModel)
     end
 
     for (i,meas) in PowerModelsDistribution.ref(pm, :meas)
-        #constraint_mc_residuallin(pm, i)
         PowerModelsSE.constraint_mc_residual(pm,i)
     end
 
