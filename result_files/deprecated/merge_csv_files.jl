@@ -44,15 +44,20 @@ CSV.write("C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\
 
 ##
 
-file2 = "C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\rIVR_PQVm_exactlinear.csv"
-file3 = "C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\rIVR_PQVm_exactlinear_rwls.csv"
-file4 = "C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\rIVR_PQVm_exactlinear_wlav.csv"
+file1 = "C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\rIVR_PQVm_nl_vs_exlinear_rwlav.csv"
+file2 = "C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\rIVR_PQVm_nl_vs_exlinear_rwls.csv"
+file3 = "C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\rIVR_PQVm_nl_vs_exlinear_wls.csv"
 
+df1 = CSV.read(file1)
 df2 = CSV.read(file2)
 df3 = CSV.read(file3)
-df4 = CSV.read(file4)
 
+df_cs3 = vcat(df1, df2, df3)
 
-df3 = vcat(df1_clean, df2, df3, df4)
+CSV.write("C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\case_study_3_update.csv", df_cs3)
 
-CSV.write("C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\case_study_3.csv", df3)
+##
+
+df_to_fix = CSV.read("C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\case_study_3.csv")
+
+df_fixed = df_to_fix

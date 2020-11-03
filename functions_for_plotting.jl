@@ -112,7 +112,23 @@ function compare_errors_compact(plt, df; yaxis_lim=Inf)
     scatter!(df.n_bus, df[:err_max], label = "Maximum error", markercolor = clr_list[2],
                 markershape = mrkshp_list[2], xaxis = "Number of feeder buses [-]",
                 yaxis = " Error [p.u.]", ylims = [0, yaxis_lim],
-                title = "Error - any formulation, any criterion", legend=:topright )
+                title = "Error - any exact formulation, any criterion", legend=:topright )
+
+end
+
+function compare_time_compact(plt, df_ivr, df_ld3f; yaxis_lim=Inf)
+
+    mrkshp_list = [:circle, :X]
+    clr_list = [:blue, :orange]
+
+    scatter!(df_ivr.n_bus, df_ivr.solve_time, label = "IVR", markercolor = clr_list[1],
+                markershape = mrkshp_list[1], xaxis = "Number of feeder buses [-]",
+                yaxis = " Solve time [s]", ylims = [0, yaxis_lim],
+                title = "Compare time LD3F - IVR", legend=:topleft )
+    scatter!(df_ld3f.n_bus, df_ld3f.solve_time, label = "LD3F", markercolor = clr_list[2],
+                markershape = mrkshp_list[2], xaxis = "Number of feeder buses [-]",
+                yaxis = " Solve time [s]", ylims = [0, yaxis_lim],
+                title = "Compare time LD3F - IVR", legend=:topleft )
 
 end
 

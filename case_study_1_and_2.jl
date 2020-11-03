@@ -92,9 +92,9 @@ for i in 1:length(models)
                 data["se_settings"] = Dict{String,Any}("estimation_criterion" => set_criterion,
                                            "weight_rescaler" => set_rescaler)
 
-		if mod == _PMD.LinDist3FlowPowerModel
-                    _PMS.vm_to_w_conversion!(data)
-		end
+				if mod == _PMD.LinDist3FlowPowerModel
+		                    _PMS.vm_to_w_conversion!(data)
+				end
                 # Solve the state estimation
                 se_results = _PMS.run_mc_se(data, mod, se_solver)
                 delta, max_err, avg = _PMS.calculate_voltage_magnitude_error(se_results, pf_results)
@@ -108,8 +108,3 @@ for i in 1:length(models)
     end # seed loop
     CSV.write("/home/adrian03/StateEstimationScripts/$(short)_PQVm_rforms_werrors.csv", df)
 end #end models loop
-# cnd = df.termination_status.=="LOCALLY_SOLVED" avg = round(sum(df.solve_time[cnd])/sum(cnd), digits=1) x_values = 1:length(df.ntw)
-#
-# scatter(x_values[cnd],df.solve_time[cnd],xlim=[0,130],
-#                                          yaxis=:log10,ylim=[1e-1,1e3],
-#                                          label="ACR (avg = $avg)")
