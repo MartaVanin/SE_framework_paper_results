@@ -1,4 +1,4 @@
-
+using LaTeXStrings
 ## case study 1
 
 df_cs1 = CSV.read("C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\clean_csv_files\\case_study_1_clean.csv")
@@ -63,7 +63,7 @@ function plot_case_study_one_time(df)
     plt
 end
 
-## case study 2
+## case study 2: LD3F vs IVR
 
 df_cs2 = CSV.read("C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\clean_csv_files\\case_study_2_clean.csv")
 
@@ -89,8 +89,48 @@ function plot_time_cs2(df; choose_criterion="rwlav")
     plt
 end
 
+function plot_errors_cs2(df; choose_criterion="rwlav")#The second plot: plt2 also good for case study 1!
+    scale=5
+    df_crit = @linq df |> where(:criterion .== choose_criterion)
+    df_IVR = @linq df_crit |> where(:eq_model .== "rIVR")
+    df_LD3F = @linq df_crit |> where(:eq_model .== "LD3F")
+    plt = scatter(df_IVR.n_bus, [df_LD3F.err_max, df_LD3F.err_avg], ylims=[0, 2*0.00167+0.0005], markerstrokecolor=[:black :orange], markercolor= [:black :orange], markersize=[6 7],
+                    markershape = [:+ :circle], markeralpha=[1 0] , markerstrokealpha=[1 0.5], label=[L"\varepsilon^{max, LD3F}" L"\varepsilon^{avg, LD3F}"],
+                     ylabel = L"\varepsilon"*" [p.u.]", xlabel="Number of buses in the feeder [-]")
 
-## case study 3
+    plot!(0:400, fill(0.00167, 2), seriestype=:hline, linestyle=:dash, linecolor=:red, label = "")
+    plot!(0:400, fill(2*0.00167, 2), seriestype=:hline, linestyle=:dash, linecolor=:red, label = "")
+
+    plot!(legendfontsize = 15, xtickfontsize=14, ytickfontsize=14, titlefontsize=16, guidefontsize=16, size = (130*scale,100*scale), legend=:bottomright)
+
+    annotate!([(410, 0.00167+0.00007, text("σ", 14, :red))])
+    annotate!([(410, 0.00167*2+0.00007, text("2σ", 14, :red))])
+
+    savefig(plt, joinpath(dirname(@__DIR__), "result_files\\plots\\")*"error_LD3F.pdf")
+    savefig(plt, joinpath(dirname(@__DIR__), "result_files\\plots\\")*"error_LD3F.png")
+
+    ## SECOND PLOT ##
+
+    plt2 = scatter(df_IVR.n_bus, [df_IVR.err_max, df_IVR.err_avg], ylims=[0, 2*0.00167+0.0005], markerstrokecolor=[:black :orange], markercolor= [:black :orange], markersize=[6 7],
+                    markershape = [:+ :circle], markeralpha=[1 0] , markerstrokealpha=[1 0.5], label=[L"\varepsilon^{max, IVR}" L"\varepsilon^{avg, IVR}"],
+                     ylabel = L"\varepsilon"*" [p.u.]", xlabel="Number of buses in the feeder [-]")
+
+    plot!(0:400, fill(0.00167, 2), seriestype=:hline, linestyle=:dash, linecolor=:red, label = "")
+    plot!(0:400, fill(2*0.00167, 2), seriestype=:hline, linestyle=:dash, linecolor=:red, label = "")
+
+    plot!(legendfontsize = 15, xtickfontsize=14, ytickfontsize=14, titlefontsize=16, guidefontsize=16, size = (130*scale,100*scale), legend=:bottomright)
+
+    annotate!([(410, 0.00167+0.00007, text("σ", 14, :red))])
+    annotate!([(410, 0.00167*2+0.00007, text("2σ", 14, :red))])
+
+    savefig(plt2, joinpath(dirname(@__DIR__), "result_files\\plots\\")*"error_IVRcs2.pdf")
+    savefig(plt2, joinpath(dirname(@__DIR__), "result_files\\plots\\")*"error_IVRcs2.png")
+
+end
+
+
+
+## case study 3: linear IVR vs IVR
 
 df_cs3 = CSV.read("C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\clean_csv_files\\case_study_3_clean.csv")
 
@@ -99,7 +139,7 @@ function plot_time_cs3(df; choose_criterion="rwlav")
     df_crit = @linq df |> where(:criterion .== choose_criterion)
     df_IVR = @linq df_crit |> where(:linear_solver .== "ma27")
     df_lin = @linq df_crit |> where(:linear_solver .== "gurobi")
-    plt = scatter(df_IVR.n_bus, [df_IVR.solve_time, df_lin.solve_time], ylims=[0, 1], markerstrokecolor=[:black :orange], markercolor= [:black :orange], markersize=[6 7],
+    plt = scatter(df_IVR.n_bus, [df_IVR.solve_time, df_lin.solve_time], ylims=[0, 1.8], markerstrokecolor=[:black :orange], markercolor= [:black :orange], markersize=[6 7],
                     markershape = [:+ :circle], markeralpha=[1 0] , markerstrokealpha=[1 0.5], label=["Nonlinear IVR" "Linear IVR"], legend=:topleft,
                      ylabel = "Solve time [s]", xlabel="Number of buses in the feeder [-]")
 
@@ -111,7 +151,28 @@ function plot_time_cs3(df; choose_criterion="rwlav")
     annotate!([(410,Statistics.mean(df_IVR.solve_time)+0.02, text("$(round(Statistics.mean(df_IVR.solve_time), digits=3))", 14, :black))])
     annotate!([(410,Statistics.mean(df_lin.solve_time)+0.02, text("$(round(Statistics.mean(df_lin.solve_time), digits=3))", 14, :orange))])
 
-    savefig(plt, joinpath(dirname(@__DIR__), "result_files\\plots\\")*"compare_time_IVR_NL_lin.pdf")
-    savefig(plt, joinpath(dirname(@__DIR__), "result_files\\plots\\")*"compare_time_IVR_NL_lin.png")
+    savefig(plt, joinpath(dirname(@__DIR__), "result_files\\plots\\")*"time_comparison_cs3.pdf")
+    savefig(plt, joinpath(dirname(@__DIR__), "result_files\\plots\\")*"time_comparison_cs3.png")
+    plt
+end
+
+## case study 4
+
+function plot_errors_cs4(df; unknowns = 111, upper_y_lim=NaN)
+    scale=5
+    isnan(upper_y_lim) ? uylim = maximum(df.err_max) : uylim = upper_y_lim
+    plt = scatter(df.n_meas/unknowns, [df.err_max, df.err_avg], ylims=[0.001, uylim], markerstrokecolor=[:black :orange], markercolor= [:black :orange], markersize=[7 7],
+                    markershape = [:+ :circle], markeralpha=[1 0] , markerstrokealpha=[1 0.5], label=[L"\varepsilon^{max}" L"\varepsilon^{avg}"],
+                     ylabel = L"\varepsilon"*" [p.u.]", xlabel="Measurements/unknowns ratio [-]")
+
+    plot!([1.0], seriestype=:vline, linestyle=:dash, linecolor=:red, label = "")
+
+    plot!(yaxis=:log, legendfontsize = 15, xtickfontsize=14, ytickfontsize=14, titlefontsize=16, guidefontsize=16, size = (130*scale,100*scale), legend=:bottomleft)
+
+    annotate!([(0.7, 0.0011, text("Underdetermined", 14, :black))])
+    annotate!([(1.25, 0.0011, text("Overdetermined", 14, :black))])
+
+    savefig(plt, joinpath(dirname(@__DIR__), "result_files\\plots\\")*"error_cs4.pdf")
+    savefig(plt, joinpath(dirname(@__DIR__), "result_files\\plots\\")*"error_cs4.png")
     plt
 end

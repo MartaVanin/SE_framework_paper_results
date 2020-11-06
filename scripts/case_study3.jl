@@ -27,8 +27,8 @@ abbreviation = ["rIVR"]
 rm_transfo = true
 rd_lines = true
 set_criterion = "rwlav"
-rescalers = [100, 1000, 10000]
-seeds = 1:2
+rescalers = 100
+seeds = 2
 
 season = "summer"
 time = 144
@@ -58,53 +58,46 @@ for i in 1:length(models)
                    termination_status=String[], objective=Float64[], criterion=String[], rescaler = Float64[], eq_model = String[],
                         linear_solver = String[], tol = Any[], err_max= Float64[], err_avg = Float64[], seed = Int64[])
 
-    for current_seed in seeds
-        for set_rescaler in rescalers
-            for ntw in 1:25 for fdr in 1:10
-                data_path = _PMS.get_enwl_dss_path(ntw, fdr)
-                if !isdir(dirname(data_path)) break end
 
-                # Load the data
-                data = _PMD.parse_file(_PMS.get_enwl_dss_path(ntw, fdr),data_model=_PMD.ENGINEERING);
-                if rm_transfo _PMS.rm_enwl_transformer!(data) end
-                if rd_lines _PMS.reduce_enwl_lines_eng!(data) end
+    for ntw in 1:25 for fdr in 1:10
+        data_path = _PMS.get_enwl_dss_path(ntw, fdr)
+        if !isdir(dirname(data_path)) break end
 
-                # Insert the load profiles
-                _PMS.insert_profiles!(data, season, elm, pfs, t = time)
+        # Load the data
+        data = _PMD.parse_file(_PMS.get_enwl_dss_path(ntw, fdr),data_model=_PMD.ENGINEERING);
+        if rm_transfo _PMS.rm_enwl_transformer!(data) end
+        if rd_lines _PMS.reduce_enwl_lines_eng!(data) end
 
-                # Transform data model
-                data = _PMD.transform_data_model(data);
+        # Insert the load profiles
+        _PMS.insert_profiles!(data, season, elm, pfs, t = time)
 
-                # Solve the power flow
-                pf_results = _PMD.run_mc_pf(data, _PMs.IVRPowerModel, solver)
+        # Transform data model
+        data = _PMD.transform_data_model(data);
 
-                # Write measurements based on power flow
-                _PMS.write_measurements!(_PMD.IVRPowerModel, data, pf_results, msr_path)
+        # Solve the power flow
+        pf_results = _PMD.run_mc_pf(data, _PMs.IVRPowerModel, solver)
 
-                # Read-in measurement data and set initial values
-                _PMS.add_measurements!(data, msr_path, actual_meas = false, seed = current_seed)
-                _PMS.assign_start_to_variables!(data)
-                _PMS.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-1.0, pg_max = 1.0, qg_min=-1.0, qg_max=1.0, pd_min=-1.0, pd_max=1.0, qd_min=-1.0, qd_max=1.0 )
+        # Write measurements based on power flow
+        _PMS.write_measurements!(_PMD.IVRPowerModel, data, pf_results, msr_path)
+        _PMS.write_measurements!(_PMD.ACRPowerModel, data, pf_results, msr_path)
 
-                # Set se settings
-                data["se_settings"] = Dict{String,Any}("estimation_criterion" => set_criterion,
-                                           "weight_rescaler" => set_rescaler)
+        # Read-in measurement data and set initial values
+        _PMS.add_measurements!(data, msr_path, actual_meas = false, seed = current_seed)
+        _PMS.assign_start_to_variables!(data)
+        _PMS.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-1.0, pg_max = 1.0, qg_min=-1.0, qg_max=1.0, pd_min=-1.0, pd_max=1.0, qd_min=-1.0, qd_max=1.0 )
 
-                se_results = run_linear_ivr_red_mc_se(data, solver_linear)
+        # Set se settings
+        data["se_settings"] = Dict{String,Any}("estimation_criterion" => set_criterion,
+                                   "weight_rescaler" => rescalers)
 
-                delta, max_err, avg = _PMS.calculate_voltage_magnitude_error(se_results, pf_results)
+        se_results = run_linear_ivr_red_mc_se(data, solver_linear)
 
-                # PRINT
-                push!(df, [ntw, fdr, se_results["solve_time"], length(data["bus"]),
-                         string(se_results["termination_status"]),
-                         se_results["objective"], set_criterion, set_rescaler, short, linear_solver, tolerance, max_err, avg, current_seed])
-           end end #loop through feeder and network
-        end #rescaler loop
-    end # seed loop
+        delta, max_err, avg = _PMS.calculate_voltage_magnitude_error(se_results, pf_results)
+
+        # PRINT
+        push!(df, [ntw, fdr, se_results["solve_time"], length(data["bus"]),
+                 string(se_results["termination_status"]),
+                 se_results["objective"], set_criterion, rescalers, short, linear_solver, tolerance, max_err, avg, seeds])
+   end end #loop through feeder and network
     CSV.write("/home/adrian03/StateEstimationScripts/$(short)_PQVm_werrors.csv", df)
 end #end models loop
-# cnd = df.termination_status.=="LOCALLY_SOLVED" avg = round(sum(df.solve_time[cnd])/sum(cnd), digits=1) x_values = 1:length(df.ntw)
-#
-# scatter(x_values[cnd],df.solve_time[cnd],xlim=[0,130],
-#                                          yaxis=:log10,ylim=[1e-1,1e3],
-#                                          label="ACR (avg = $avg)")

@@ -18,7 +18,6 @@ rm_transfo = true
 rd_lines = true
 set_criterion = "rwlav"
 set_rescaler = 100
-seeds = 1:2
 
 season = "summer"
 time = 144
@@ -36,13 +35,12 @@ solver = _JMP.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
 
 df = _DF.DataFrame(ntw=Int64[], fdr=Int64[], solve_time=Float64[], n_bus=Int64[],
                termination_status=String[], objective=Float64[], criterion=String[], rescaler = Float64[], eq_model = String[],
-                    linear_solver = String[], tol = Any[], err_max= Float64[], err_avg = Float64[], seed = Int64[])
+                    linear_solver = String[], tol = Any[], err_max= Float64[], err_avg = Float64[], n_meas = Int64[])
 
 ntw = 1
 fdr = 1
 
 data_path = _PMS.get_enwl_dss_path(ntw, fdr)
-if !isdir(dirname(data_path)) break end
 
 # Load the data
 data = _PMD.parse_file(_PMS.get_enwl_dss_path(ntw, fdr),data_model=_PMD.ENGINEERING);
@@ -56,27 +54,36 @@ _PMS.insert_profiles!(data, season, elm, pfs, t = time)
 data = _PMD.transform_data_model(data);
 
 # Solve the power flow
-pf_results = _PMD.run_mc_pf(data, _PMs.IVRPowerModel, solver)
+pf_results = _PMD.run_mc_pf(data, _PMs.ACPPowerModel, solver)
 
 # Write measurements based on power flow
-_PMS.write_measurements!(_PMD.IVRPowerModel, data, pf_results, msr_path)
+_PMS.write_measurements!(_PMD.ACPPowerModel, data, pf_results, msr_path)
 
 # Read-in measurement data and set initial values
-_PMS.add_measurements!(data, msr_path, actual_meas = false, seed = current_seed)
-_PMS.assign_start_to_variables!(data)
+_PMS.add_measurements!(data, msr_path, actual_meas = false, seed = 1)
 _PMS.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-1.0, pg_max = 1.0, qg_min=-1.0, qg_max=1.0, pd_min=-1.0, pd_max=1.0, qd_min=-1.0, qd_max=1.0 )
 
 # Set se settings
 data["se_settings"] = Dict{String,Any}("estimation_criterion" => set_criterion,
                            "weight_rescaler" => set_rescaler)
 
-se_results = run_linear_ivr_red_mc_se(data, solver_linear)
+for i in 1:Int64(length(data["meas"])/2)
+    meas_ids = []
+    for (m, meas) in data["meas"]
+        push!(meas_ids, m)
+    end
+    se_results = _PMS.run_ivr_red_mc_se(data, solver)
+    delta, max_err, avg = _PMS.calculate_voltage_magnitude_error(se_results, pf_results)
 
-delta, max_err, avg = _PMS.calculate_voltage_magnitude_error(se_results, pf_results)
+    push!(df, [ntw, fdr, se_results["solve_time"], length(data["bus"]),
+             string(se_results["termination_status"]),
+             se_results["objective"], set_criterion, set_rescaler, short, linear_solver, tolerance, max_err, avg, length(data["meas"])])
 
-# PRINT
-push!(df, [ntw, fdr, se_results["solve_time"], length(data["bus"]),
-         string(se_results["termination_status"]),
-         se_results["objective"], set_criterion, set_rescaler, short, linear_solver, tolerance, max_err, avg, current_seed])
+    delete!(data["meas"], meas_ids[1])
+    delete!(data["meas"], meas_ids[2])
 
-CSV.write("/home/adrian03/StateEstimationScripts/underdetermined_study.csv", df)
+end
+
+CSV.write(joinpath(dirname(@__DIR__), "result_files\\clean_csv_files\\case_study_4_clean.csv"), df)
+
+plot_errors_cs4(df; unknowns = 111, upper_y_lim=0.2)
