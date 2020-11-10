@@ -1,4 +1,4 @@
-using LaTeXStrings
+using LaTeXStrings, DataFramesMeta, Plots
 ## case study 1
 
 df_cs1 = CSV.read("C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\clean_csv_files\\case_study_1_clean.csv")
@@ -161,7 +161,7 @@ end
 function plot_errors_cs4(df; unknowns = 111, upper_y_lim=NaN)
     scale=5
     isnan(upper_y_lim) ? uylim = maximum(df.err_max) : uylim = upper_y_lim
-    plt = scatter(df.n_meas/unknowns, [df.err_max, df.err_avg], ylims=[0.001, uylim], markerstrokecolor=[:black :orange], markercolor= [:black :orange], markersize=[7 7],
+    plt = scatter(df.n_meas/unknowns, [df.err_max, df.err_avg], ylims=[0.0001, uylim], markerstrokecolor=[:black :orange], markercolor= [:black :orange], markersize=[7 7],
                     markershape = [:+ :circle], markeralpha=[1 0] , markerstrokealpha=[1 0.5], label=[L"\varepsilon^{max}" L"\varepsilon^{avg}"],
                      ylabel = L"\varepsilon"*" [p.u.]", xlabel="Measurements/unknowns ratio [-]")
 

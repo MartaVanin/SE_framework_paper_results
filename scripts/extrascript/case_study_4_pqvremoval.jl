@@ -69,25 +69,25 @@ _PMS.update_all_bounds!(data; v_min = 0.85, v_max = 1.15, pg_min=-1.0, pg_max = 
 data["se_settings"] = Dict{String,Any}("estimation_criterion" => set_criterion,
                            "weight_rescaler" => set_rescaler)
 
-load_ids = []
-bus_ids = []
-for (l, load) in data["load"]
-    push!(load_ids, parse(Int64, l))
-    push!(bus_ids, load["load_bus"])
-end
 
 meas_ids = []
-for i in 1:length(load_ids)
-    for (m, meas) in data["meas"]
-        if meas["var"] == :vm && meas["cmp_id"] == bus_ids[i]
-            push!(meas_ids, m)
-        elseif meas["var"] != :vm && meas["cmp_id"] == load_ids[i]
-            push!(meas_ids, m)
-        end
+for (m, meas) in data["meas"]
+    if meas["var"] == :qd
+        push!(meas_ids, m)
+    end
+end
+for (m, meas) in data["meas"]
+    if meas["var"] == :pd
+        push!(meas_ids, m)
+    end
+end
+for (m, meas) in data["meas"]
+    if meas["var"] == :vm
+        push!(meas_ids, m)
     end
 end
 
-for i in 1:length(load_ids)
+for i in 1:length(meas_ids)
     se_results = _PMS.run_ivr_red_mc_se(data, solver)
     delta, max_err, avg = _PMS.calculate_voltage_magnitude_error(se_results, pf_results)
 
@@ -95,11 +95,9 @@ for i in 1:length(load_ids)
          string(se_results["termination_status"]),
          se_results["objective"], set_criterion, set_rescaler, short, linear_solver, tolerance, max_err, avg, length(data["meas"])])
 
-     delete!(data["meas"], meas_ids[3*(i-1)+1])
-     delete!(data["meas"], meas_ids[3*(i-1)+2])
-     delete!(data["meas"], meas_ids[3*(i-1)+3])
+     delete!(data["meas"], meas_ids[i])
 end
 
 plot_errors_cs4(df; unknowns = 111, upper_y_lim=1)
 
-CSV.write(joinpath(dirname(@__DIR__), "result_files\\clean_csv_files\\case_study_4_clean.csv"), df)
+CSV.write(joinpath(dirname(@__DIR__), "result_files\\clean_csv_files\\case_study_4_pqvremoval_seereadme.csv"), df)
