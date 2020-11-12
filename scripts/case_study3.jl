@@ -9,14 +9,14 @@
 using Ipopt, Gurobi
 using DataFrames, CSV
 using JuMP, PowerModels, PowerModelsDistribution
-using PowerModelsSE, Distributions
+using PowerModelsDistributionStateEstimation, Distributions
 
 # Define Pkg cte
 const _DF = DataFrames
 const _JMP = JuMP
 const _PMs = PowerModels
 const _PMD = PowerModelsDistribution
-const _PMS = PowerModelsSE
+const _PMS = PowerModelsDistributionStateEstimation
 const _DST = Distributions
 
 ################################################################################

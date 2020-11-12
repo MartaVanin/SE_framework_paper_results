@@ -9,14 +9,14 @@ pkg"activate ."
 using Ipopt, Gurobi
 using DataFrames, CSV
 using JuMP, PowerModels, PowerModelsDistribution
-using PowerModelsSE
+using PowerModelsDistributionStateEstimation
 
 # Define Pkg cte
 const _DF = DataFrames
 const _JMP = JuMP
 const _PMs = PowerModels
 const _PMD = PowerModelsDistribution
-const _PMS = PowerModelsSE
+const _PMS = PowerModelsDistributionStateEstimation
 
 ################################################################################
 

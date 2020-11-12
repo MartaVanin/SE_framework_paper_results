@@ -1,7 +1,7 @@
 using Ipopt
 using DataFrames, CSV
 using JuMP, PowerModels, PowerModelsDistribution
-using PowerModelsSE, Distributions
+using PowerModelsDistributionStateEstimation, Distributions
 
 include("C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\plotting\\clean_plots.jl")
 
@@ -10,7 +10,7 @@ const _DF = DataFrames
 const _JMP = JuMP
 const _PMs = PowerModels
 const _PMD = PowerModelsDistribution
-const _PMS = PowerModelsSE
+const _PMS = PowerModelsDistributionStateEstimation
 const _DST = Distributions
 
 # Input data

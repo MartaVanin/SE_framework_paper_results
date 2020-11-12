@@ -631,11 +631,11 @@ git-tree-sha1 = "ec3f9581691f946c941102109b18bff9ffb66f1b"
 uuid = "d7431456-977f-11e9-2de3-97ff7677985e"
 version = "0.9.1"
 
-[[PowerModelsSE]]
+[[PowerModelsDistributionStateEstimation]]
 deps = ["CSV", "DataFrames", "Distributions", "InfrastructureModels", "Ipopt", "JSON", "JuMP", "LinearAlgebra", "Memento", "Optim", "PowerModels", "PowerModelsDistribution", "Random", "SCS", "SpecialFunctions", "Statistics"]
 git-tree-sha1 = "6e383153fba03ea895f8f0d17aee531d47d95ba1"
 repo-rev = "master"
-repo-url = "https://github.com/Electa-Git/PowerModelsSE.jl.git"
+repo-url = "https://github.com/Electa-Git/PowerModelsDistributionStateEstimation.jl.git"
 uuid = "d0713e65-ce0c-4a8e-a1da-2ed737d217c4"
 version = "0.1.2"
 
