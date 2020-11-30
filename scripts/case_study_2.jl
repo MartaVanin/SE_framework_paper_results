@@ -43,12 +43,13 @@ se_solver = _JMP.optimizer_with_attributes(Gurobi.Optimizer, "TimeLimit"=>180.0)
 
 display("You are launching a simulation with rm_transfo: $(string(rm_transfo)) and rd_lines: $(string(rd_lines)), criterion: $(set_criterion), variable rescaler, linear solver : $linear_solver")
 
+global df = _DF.DataFrame(ntw=Int64[], fdr=Int64[], solve_time=Float64[], n_bus=Int64[],
+              termination_status=String[], objective=Float64[], criterion=String[], rescaler = Float64[], eq_model = String[],
+                 linear_solver = String[], tol = Any[], err_max= Float64[], err_avg = Float64[], seed = Int64[])
+
 for i in 1:length(models)
     mod = models[i]
     short = abbreviation[i]
-    df = _DF.DataFrame(ntw=Int64[], fdr=Int64[], solve_time=Float64[], n_bus=Int64[],
-                   termination_status=String[], objective=Float64[], criterion=String[], rescaler = Float64[], eq_model = String[],
-                        linear_solver = String[], tol = Any[], err_max= Float64[], err_avg = Float64[], seed = Int64[])
 
     for set_criterion in criteria
         for ntw in 1:25 for fdr in 1:10
@@ -73,7 +74,7 @@ for i in 1:length(models)
             _PMS.write_measurements!(_PMD.ACPPowerModel, data, pf_results, msr_path)
 
             # Read-in measurement data and set initial values
-            _PMS.add_measurements!(data, msr_path, actual_meas = false, seed = current_seed)
+            _PMS.add_measurements!(data, msr_path, actual_meas = false, seed = 2)
             _PMS.assign_start_to_variables!(data)
             _PMS.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-1.0, pg_max = 1.0, qg_min=-1.0, qg_max=1.0, pd_min=-1.0, pd_max=1.0, qd_min=-1.0, qd_max=1.0 )
 
@@ -94,7 +95,7 @@ for i in 1:length(models)
             # PRINT
             push!(df, [ntw, fdr, se_results["solve_time"], length(data["bus"]),
                      string(se_results["termination_status"]),
-                     se_results["objective"], set_criterion, set_rescaler, short, chosen_solver, tolerance, max_err, avg, current_seed])
+                     se_results["objective"], set_criterion, set_rescaler, short, chosen_solver, tolerance, max_err, avg, 2])
        end end #loop through feeder and network
    end #criteria loop
 end #end models loop

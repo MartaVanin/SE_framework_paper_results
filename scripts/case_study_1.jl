@@ -18,9 +18,9 @@ models = [_PMS.ReducedIVRPowerModel, _PMS.ReducedACRPowerModel, _PMS.ReducedACPP
 abbreviation = ["rIVR", "rACR", "rACP"]
 rm_transfo = true
 rd_lines = true
-set_criterion = "wls"
-rescalers = [100, 1000, 10000]
-seeds = 1:2
+set_criterion = "rwlav"
+rescalers = 100
+seeds = 2
 
 season = "summer"
 time_step = 144
@@ -59,21 +59,21 @@ for i in 1:length(models)
                 if !isdir(dirname(data_path)) break end
 
                 # Load the data
-                data = _PMD.parse_file(_PMS.get_enwl_dss_path(ntw, fdr),data_model=_PMD.ENGINEERING);
+				data = _PMD.parse_file(_PMS.get_enwl_dss_path(ntw, fdr),data_model=_PMD.ENGINEERING);
                 if rm_transfo _PMS.rm_enwl_transformer!(data) end
                 if rd_lines _PMS.reduce_enwl_lines_eng!(data) end
 
                 # Insert the load profiles
-                _PMS.insert_profiles!(data, season, elm, pfs, t = time_step)
+                _PMS.insert_profiles!(data, season, elm, pfs, t = time)
 
                 # Transform data model
                 data = _PMD.transform_data_model(data);
 
                 # Solve the power flow
-                pf_results = _PMD.run_mc_pf(data, _PMs.ACPPowerModel, pf_solver)
+                pf_results = _PMD.run_mc_pf(data, _PMs.IVRPowerModel, se_solver)
 
                 # Write measurements based on power flow
-				_PMS.convert_rectangular_to_polar!(pf_results["solution"])
+		        _PMS.convert_rectangular_to_polar!(pf_results["solution"])
                 _PMS.write_measurements!(_PMD.ACPPowerModel, data, pf_results, msr_path)
 
                 # Read-in measurement data and set initial values
@@ -89,7 +89,7 @@ for i in 1:length(models)
 		                    _PMS.vm_to_w_conversion!(data)
 				end
                 # Solve the state estimation
-                se_results = _PMS.run_mc_se(data, mod, se_solver)
+                se_results = _PMS.run_mc_se(data, mod, pf_solver)
                 delta, max_err, avg = _PMS.calculate_voltage_magnitude_error(se_results, pf_results)
 
                 # PRINT
@@ -99,6 +99,5 @@ for i in 1:length(models)
            end end #loop through feeder and network
         end #rescaler loop
     end # seed loop
-    #CSV.write("$(short)_PQVm_rforms_werrors.csv", df)
-	CSV.write("Results_DSSE_paper\\result_files\\clean_csv_files\\case_study_1_clean.csv", df)
+    CSV.write("$(short)_PQVm_rforms_werrors.csv", df)
 end #end models loop
