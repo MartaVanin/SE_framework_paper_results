@@ -1,10 +1,3 @@
-#!/home/adrian03/julia-1.5.2/bin/julia
-
-cd("/home/adrian03/StateEstimationScripts")
-
-using Pkg
-pkg"activate ."
-
 # Load Pkgs
 using Ipopt, Gurobi
 using DataFrames, CSV
@@ -21,8 +14,8 @@ const _PMS = PowerModelsDistributionStateEstimation
 ################################################################################
 
 # Input data
-models = [_PMD.LinDist3FlowPowerModel]#[_PMS.ReducedIVRPowerModel, _PMS.ReducedACRPowerModel, _PMS.ReducedACPPowerModel]
-abbreviation = ["LD3F"]#["rIVR"]
+models = [_PMS.ReducedIVRPowerModel, _PMS.ReducedACRPowerModel, _PMS.ReducedACPPowerModel]
+abbreviation = ["rIVR", "rACR", "rACP"]
 rm_transfo = true
 rd_lines = true
 set_criterion = "wls"
@@ -106,5 +99,6 @@ for i in 1:length(models)
            end end #loop through feeder and network
         end #rescaler loop
     end # seed loop
-    CSV.write("/home/adrian03/StateEstimationScripts/$(short)_PQVm_rforms_werrors.csv", df)
+    #CSV.write("$(short)_PQVm_rforms_werrors.csv", df)
+	CSV.write("Results_DSSE_paper\\result_files\\clean_csv_files\\case_study_1_clean.csv", df)
 end #end models loop

@@ -1,10 +1,3 @@
-#!/home/adrian03/julia-1.5.2/bin/julia
-
-cd("/home/adrian03/StateEstimationScripts")
-
-using Pkg
-pkg"activate ."
-
 # Load Pkgs
 using Ipopt, Gurobi
 using DataFrames, CSV
@@ -105,4 +98,4 @@ for i in 1:length(models)
        end end #loop through feeder and network
    end #criteria loop
 end #end models loop
-CSV.write("/home/adrian03/StateEstimationScripts/case_study_2_up.csv", df)
+CSV.write("case_study_2_up.csv", df)

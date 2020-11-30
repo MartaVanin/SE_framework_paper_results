@@ -3,7 +3,7 @@ using DataFrames, CSV
 using JuMP, PowerModels, PowerModelsDistribution
 using PowerModelsDistributionStateEstimation, Distributions
 
-include("C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\plotting\\clean_plots.jl")
+include(joinpath(dirname(@__DIR__),"Results_DSSE_paper\\plotting\\clean_plots.jl"))
 
 # Define Pkg cte
 const _DF = DataFrames
@@ -26,7 +26,7 @@ time = 144
 elm = ["load", "pv"]
 pfs = [0.95, 0.90]
 
-msr_path = joinpath("C:/Users/mvanin/Desktop/repos/temp.csv")
+msr_path = joinpath("temp.csv")
 # Set solve
 linear_solver = "mumps"
 tolerance = 1e-5
@@ -87,7 +87,7 @@ for i in 1:length(load_ids)
     end
 end
 
-for i in 1:length(load_ids)
+for i in 1:(length(load_ids)-16)
     se_results = _PMS.run_ivr_red_mc_se(data, solver)
     delta, max_err, avg = _PMS.calculate_voltage_magnitude_error(se_results, pf_results)
 
