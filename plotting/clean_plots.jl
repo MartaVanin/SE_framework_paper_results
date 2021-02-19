@@ -1,7 +1,7 @@
 using LaTeXStrings, DataFramesMeta, Plots
 ## case study 1
 
-df_cs1 = CSV.read("C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\clean_csv_files\\case_study_1_clean.csv")
+df_cs1 = CSV.read(joinpath(dirname(@__DIR__), "result_files\\clean_csv_files\\case_study_1_clean.csv"))
 
 function plot_case_study_one_time(df)
     time_data_points = []
@@ -65,7 +65,7 @@ end
 
 ## case study 2: LD3F vs IVR
 
-df_cs2 = CSV.read("C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\clean_csv_files\\case_study_2_clean.csv")
+df_cs1 = CSV.read(joinpath(dirname(@__DIR__), "result_files\\clean_csv_files\\case_study_2_clean.csv"))
 
 function plot_time_cs2(df; choose_criterion="rwlav")
     scale=5
@@ -128,11 +128,9 @@ function plot_errors_cs2(df; choose_criterion="rwlav")#The second plot: plt2 als
 
 end
 
-
-
 ## case study 3: linear IVR vs IVR
 
-df_cs3 = CSV.read("C:\\Users\\mvanin\\Desktop\\repos\\Results_DSSE_paper\\result_files\\clean_csv_files\\case_study_3_clean.csv")
+df_cs1 = CSV.read(joinpath(dirname(@__DIR__), "result_files\\clean_csv_files\\case_study_3_clean.csv"))
 
 function plot_time_cs3(df; choose_criterion="rwlav")
     scale=5

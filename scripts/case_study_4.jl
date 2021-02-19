@@ -3,7 +3,7 @@ using DataFrames, CSV
 using JuMP, PowerModels, PowerModelsDistribution
 using PowerModelsDistributionStateEstimation, Distributions
 
-include(joinpath(dirname(@__DIR__),"Results_DSSE_paper\\plotting\\clean_plots.jl"))
+include(joinpath(dirname(@__DIR__),"plotting\\clean_plots.jl"))
 
 # Define Pkg cte
 const _DF = DataFrames
@@ -86,20 +86,37 @@ for i in 1:length(load_ids)
         end
     end
 end
-
-for i in 1:(length(load_ids)-16)
+delete_bus = []
+for i in 1:length(load_ids)
     se_results = _PMS.run_ivr_red_mc_se(data, solver)
-    delta, max_err, avg = _PMS.calculate_voltage_magnitude_error(se_results, pf_results)
+    se_res = deepcopy(se_results)
+    pf_res = deepcopy(pf_results)
+
+    if i != 1
+        for db in delete_bus
+            if db == 1
+                pf_res["solution"]["bus"]["1"] = Dict{String, Any}("vm" => [1.0, 1.0, 1.0])
+                se_res["solution"]["bus"]["1"] = Dict{String, Any}("vr" => [1.0, 1.0, 1.0])
+                se_res["solution"]["bus"]["1"]["vi"] = [0.0, 0.0, 0.0]
+            else
+                delete!(se_res["solution"]["bus"], "$db")
+                delete!(pf_res["solution"]["bus"], "$db")
+            end
+        end
+    end
+
+    delta, max_err, avg = _PMS.calculate_voltage_magnitude_error(se_res, pf_res)
 
     push!(df, [ntw, fdr, se_results["solve_time"], length(data["bus"]),
          string(se_results["termination_status"]),
          se_results["objective"], set_criterion, set_rescaler, short, linear_solver, tolerance, max_err, avg, length(data["meas"])])
 
-     delete!(data["meas"], meas_ids[3*(i-1)+1])
-     delete!(data["meas"], meas_ids[3*(i-1)+2])
-     delete!(data["meas"], meas_ids[3*(i-1)+3])
+    push!(delete_bus, data["meas"][meas_ids[3*(i-1)+1]]["cmp_id"])
+    delete!(data["meas"], meas_ids[3*(i-1)+1])
+    delete!(data["meas"], meas_ids[3*(i-1)+2])
+    delete!(data["meas"], meas_ids[3*(i-1)+3])
 end
 
-plot_errors_cs4(df; unknowns = 111, upper_y_lim=1)
+#plot_errors_cs4(df; unknowns = 111, upper_y_lim=1)
 
-CSV.write(joinpath(dirname(@__DIR__), "result_files\\clean_csv_files\\case_study_4_clean.csv"), df)
+CSV.write(joinpath(dirname(@__DIR__), "result_files\\clean_csv_files\\case_study_4_clean_nw.csv"), df)
