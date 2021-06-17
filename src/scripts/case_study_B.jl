@@ -1,0 +1,86 @@
+
+function run_case_study_B(path_to_result_csv; ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5, gurobi_lic::Bool=false, set_rescaler = 100)
+
+    # Input data
+    models = [_PMD.LinDist3FlowPowerModel, _PMDSE.ReducedIVRUPowerModel]
+    abbreviation = ["LD3F","rIVR"]
+    rm_transfo = true
+    rd_lines = true
+    criteria = ["rwlav"]
+
+    season = "summer"
+    time_step = 144
+    elm = ["load", "pv"]
+    pfs = [0.95, 0.90]
+
+    ################################################################################
+
+    # Set path
+    msr_path = joinpath(mktempdir(),"temp.csv")
+
+    # Set solve
+    pf_solver = _PMD.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
+                                                            "tol"=>tolerance,
+                                                            "print_level"=>0,
+                                                            "linear_solver"=>ipopt_lin_sol)
+
+    lin_se_solver = gurobi_lic ? _PMD.optimizer_with_attributes(Gurobi.Optimizer, "TimeLimit"=>180.0) : pf_solver
+
+    df = _DF.DataFrame(ntw=Int64[], fdr=Int64[], solve_time=Float64[], n_bus=Int64[],
+    termination_status=String[], objective=Float64[], criterion=String[], rescaler = Float64[], eq_model = String[],
+            ipopt_lin_solver = String[], tol = Any[], err_max_1=Float64[], err_max_2=Float64[], err_max_3=Float64[], err_avg_1 = Float64[], err_avg_2 = Float64[], err_avg_3 = Float64[])
+
+    for i in 1:length(models)
+        mod = models[i]
+        short = abbreviation[i]
+
+        for criterion in criteria
+            for ntw in 1:25 for fdr in 1:10
+                data_path = _PMDSE.get_enwl_dss_path(ntw, fdr)
+                if !isdir(dirname(data_path)) break end
+
+                # Load the data
+                data = _PMD.parse_file(_PMDSE.get_enwl_dss_path(ntw, fdr),data_model=_PMD.ENGINEERING);
+                if rm_transfo _PMDSE.rm_enwl_transformer!(data) end
+                if rd_lines _PMDSE.reduce_enwl_lines_eng!(data) end
+
+                # Insert the load profiles
+                _PMDSE.insert_profiles!(data, season, elm, pfs, t = time_step)
+
+                # Transform data model
+                data = _PMD.transform_data_model(data);
+
+                # Solve the power flow
+                pf_results = _PMD.solve_mc_pf(data, _PMD.ACPUPowerModel, pf_solver)
+
+                # Write measurements based on power flow
+                _PMDSE.write_measurements!(_PMD.ACPUPowerModel, data, pf_results, msr_path)
+
+                # Read-in measurement data and set initial values
+                _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 2)
+                _PMDSE.assign_start_to_variables!(data)
+                _PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-1.0, pg_max = 1.0, qg_min=-1.0, qg_max=1.0, pd_min=-1.0, pd_max=1.0, qd_min=-1.0, qd_max=1.0 )
+
+                # Set se settings
+                data["se_settings"] = Dict{String,Any}("criterion" => criterion,
+                                        "rescaler" => set_rescaler)
+
+                if mod == _PMD.LinDist3FlowPowerModel
+                    _PMDSE.vm_to_w_conversion!(data)
+                    se_results = _PMDSE.solve_mc_se(data, mod, lin_se_solver)
+                    chosen_solver = string(lin_se_solver)[1:end-9]
+                else
+                    se_results = _PMDSE.solve_mc_se(data, mod, pf_solver)
+                    chosen_solver = ipopt_lin_sol
+                end
+                delta_1, delta_2, delta_3, max_1, max_2, max_3, mean_1, mean_2, mean_3 = _SEF.calculate_voltage_magnitude_error_perphase(se_results, pf_results)
+
+                # store result
+                push!(df, [ntw, fdr, se_results["solve_time"], length(data["bus"]),
+                        string(se_results["termination_status"]),
+                        se_results["objective"], criterion, set_rescaler, short, ipopt_lin_sol, tolerance, max_1, max_2, max_3, mean_1, mean_2, mean_3])
+        end end #loop through feeder and network
+        CSV.write(path_to_result_csv, df)
+    end #criteria loop
+    end #end models loop
+end
