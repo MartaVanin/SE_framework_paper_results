@@ -1,4 +1,4 @@
-function run_case_study_D(path_to_csv_result::String; ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5)
+function run_case_study_D(path_to_csv_result::String; ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5, power_base::Float64=1e5)
 
     # Input data
     rm_transfo = true
@@ -24,6 +24,7 @@ function run_case_study_D(path_to_csv_result::String; ipopt_lin_sol::String="mum
     data = _PMD.parse_file(_PMDSE.get_enwl_dss_path(1, 1),data_model=_PMD.ENGINEERING);
     if rm_transfo _PMDSE.rm_enwl_transformer!(data) end
     if rd_lines _PMDSE.reduce_enwl_lines_eng!(data) end
+    data["settings"]["sbase_default"] = power_base
 
     # Insert the load profiles
     _PMDSE.insert_profiles!(data, season, elm, pfs, t = time_step)
@@ -35,7 +36,22 @@ function run_case_study_D(path_to_csv_result::String; ipopt_lin_sol::String="mum
     pf_results = _PMD.solve_mc_pf(data, _PMD.ACPUPowerModel, solver)
 
     # Write measurements based on power flow
-    _PMDSE.write_measurements!(_PMD.ACPUPowerModel, data, pf_results, msr_path)
+    v_pu = data["settings"]["vbases_default"]["1"]* data["settings"]["voltage_scale_factor"] # divider [V] to get the voltage in per units.
+    v_max_err = 1.15 # maximum error of voltage measurement = 0.5% or 1.15 V
+    σ_v = 1/3*v_max_err/v_pu
+
+    p_pu = data["settings"]["sbase"] # divider [kW] to get the power in per units.
+    p_max_err = 0.01 # maximum error of power measurement = 10W, or 0.01 kW
+    σ_p = 1/3*p_max_err/p_pu
+
+    # Write measurements based on power flow
+    σ_dict = Dict("load" => Dict("load" => σ_p,
+                    "bus"  => σ_v),
+                    "gen"  => Dict("gen" => σ_p,
+                    "bus"  => σ_v)
+                            )                
+
+    _PMDSE.write_measurements!(_PMD.ACPUPowerModel, data, pf_results, msr_path, σ_dict)
 
     # Read-in measurement data and set initial values
     _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 2)

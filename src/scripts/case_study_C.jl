@@ -1,4 +1,4 @@
-function run_case_study_C(path_to_result_csv; ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5, gurobi_lic::Bool=false, set_rescaler = 100)
+function run_case_study_C(path_to_result_csv; ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5, gurobi_lic::Bool=false, set_rescaler = 100, power_base::Float64=1e5)
 
     # Input data
     rm_transfo = true
@@ -34,6 +34,7 @@ function run_case_study_C(path_to_result_csv; ipopt_lin_sol::String="mumps", tol
         data = _PMD.parse_file(_PMDSE.get_enwl_dss_path(ntw, fdr),data_model=_PMD.ENGINEERING);
         if rm_transfo _PMDSE.rm_enwl_transformer!(data) end
         if rd_lines _PMDSE.reduce_enwl_lines_eng!(data) end
+        data["settings"]["sbase_default"] = power_base
 
         # Insert the load profiles
         _PMDSE.insert_profiles!(data, season, elm, pfs, t = time)

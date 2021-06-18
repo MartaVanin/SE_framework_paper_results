@@ -1,5 +1,5 @@
 
-function run_case_study_B(path_to_result_csv; ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5, gurobi_lic::Bool=false, set_rescaler = 100)
+function run_case_study_B(path_to_result_csv; ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5, gurobi_lic::Bool=false, set_rescaler = 100, power_base::Float64=1e5)
 
     # Input data
     models = [_PMD.LinDist3FlowPowerModel, _PMDSE.ReducedIVRUPowerModel]
@@ -43,6 +43,7 @@ function run_case_study_B(path_to_result_csv; ipopt_lin_sol::String="mumps", tol
                 data = _PMD.parse_file(_PMDSE.get_enwl_dss_path(ntw, fdr),data_model=_PMD.ENGINEERING);
                 if rm_transfo _PMDSE.rm_enwl_transformer!(data) end
                 if rd_lines _PMDSE.reduce_enwl_lines_eng!(data) end
+                data["settings"]["sbase_default"] = power_base
 
                 # Insert the load profiles
                 _PMDSE.insert_profiles!(data, season, elm, pfs, t = time_step)
@@ -51,10 +52,25 @@ function run_case_study_B(path_to_result_csv; ipopt_lin_sol::String="mumps", tol
                 data = _PMD.transform_data_model(data);
 
                 # Solve the power flow
-                pf_results = _PMD.solve_mc_pf(data, _PMD.ACPUPowerModel, pf_solver)
+                pf_results = _PMD.solve_mc_pf(data, _PMD.ACPUPowerModel, se_solver)
 
                 # Write measurements based on power flow
-                _PMDSE.write_measurements!(_PMD.ACPUPowerModel, data, pf_results, msr_path)
+                v_pu = data["settings"]["vbases_default"]["1"]* data["settings"]["voltage_scale_factor"] # divider [V] to get the voltage in per units.
+                v_max_err = 1.15 # maximum error of voltage measurement = 0.5% or 1.15 V
+                σ_v = 1/3*v_max_err/v_pu
+            
+                p_pu = data["settings"]["sbase"] # divider [kW] to get the power in per units.
+                p_max_err = 0.01 # maximum error of power measurement = 10W, or 0.01 kW
+                σ_p = 1/3*p_max_err/p_pu
+            
+                # Write measurements based on power flow
+                σ_dict = Dict("load" => Dict("load" => σ_p,
+                                "bus"  => σ_v),
+                                "gen"  => Dict("gen" => σ_p,
+                                "bus"  => σ_v)
+                                        )                
+
+                _PMDSE.write_measurements!(_PMD.ACPUPowerModel, data, pf_results, msr_path, σ_dict)
 
                 # Read-in measurement data and set initial values
                 _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 2)
