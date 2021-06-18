@@ -20,6 +20,7 @@ include("scripts/case_study_A.jl")
 include("scripts/case_study_B.jl")
 include("scripts/case_study_C.jl")
 include("scripts/case_study_D.jl")
+include("scripts/case_study_E.jl")
 
 include("utils/io_utils.jl")
 include("utils/linear_ivr_functions.jl")
