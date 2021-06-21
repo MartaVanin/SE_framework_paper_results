@@ -49,7 +49,7 @@ function run_case_study_D(path_to_csv_result::String, nlsolver; power_base::Floa
                     "bus"  => σ_v)
                             )                
 
-    _PMDSE.write_measurements!(_PMD.ACPUPowerModel, data, pf_results, msr_path, σ_dict)
+    _PMDSE.write_measurements!(_PMD.ACPUPowerModel, data, pf_results, msr_path, σ = σ_dict)
 
     # Read-in measurement data and set initial values
     _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 2)

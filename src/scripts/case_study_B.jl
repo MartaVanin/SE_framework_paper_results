@@ -51,7 +51,7 @@ function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set
                 data = _PMD.transform_data_model(data);
 
                 # Solve the power flow
-                pf_results = _PMD.solve_mc_pf(data, _PMD.ACPUPowerModel, se_solver)
+                pf_results = _PMD.solve_mc_pf(data, _PMD.ACPUPowerModel, pf_solver)
 
                 # Write measurements based on power flow
                 v_pu = data["settings"]["vbases_default"]["1"]* data["settings"]["voltage_scale_factor"] # divider [V] to get the voltage in per units.

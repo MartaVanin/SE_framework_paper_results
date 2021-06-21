@@ -6,31 +6,44 @@ If you are looking for the general open-source state estimation framework packag
 
 ## Producing and comparing the results
 
-The csv files in result_files/clean_csv_files are the ones used to generate the figures in the paper. The figures in the paper are directly plotted in LaTeX (tikz), but some plotting functionalities are provided here in this package (see below), so that the user can generate virtually the same plots directly in julia.
+The csv files in `result_files/` are the ones used to generate the figures in the paper. The figures in the paper are directly plotted in LaTeX (tikz), but some plotting functionalities are provided here in this package (see instructions below), so that the user can generate virtually the same plots directly in julia.
 
-The scripts in this repository allow the user to reproduce the paper results, but slight variations in their values can always occur depending on the solvers types and versions, machine used, etc. The paper contains the updated details on the conditions in which its results were generated. The code has been tested on Ubuntu and Windows but not MacOS, although I believe that it should work there too.
+The scripts in this repository allow the user to reproduce the paper results, but slight variations in their values can always occur depending on the solvers types and versions, machine used, etc. The paper contains the updated details on the conditions in which its results were generated. This code has been tested on Ubuntu and Windows but not MacOS.
 
 Feel free to contact me in case of doubts or mistakes.
 
 ## Installation
+
+*Please use Julia v1.6*
 
 This repository takes the form of a (non-registered) julia package, and can be installed from the package manager, i.e., copy-pasting the following in the julia REPL:
 ```
 ]add https://github.com/MartaVanin/SE_framework_paper_results.git
 ```
 All needed dependencies are installed automatically, so the user does not need to worry about them. If interested, the dependencies are reported in `Project.toml`.
-
-*For optimal results please use Julia v1.6*
+In addition to the package itself, one (or more) solvers to solve the optimization problem is required. A popular non linear solver is Ipopt. To obtain it, since it is
+a registered julia package, it is sufficient to install it from package manager:
+```
+]add Ipopt
+```
+to obtain a spcific version of Ipopt (or any other package):
+```
+]add Ipopt@0.6.5
+```
+Ipopt can be used also to solve the linear problems that are present in the scripts. However, for these problems Ipopt is largely outperformed by other linear solvers, e.g., Gurobi.
+If you have a Gurobi license (easily available for academics), we recommend that you use that.
+In general, any solver compatible with JuMP can be used. See the available solvers and which problem classes they can solve [here](https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers).
 
 ## How to run the script for a case study
 
-The scripts for each case study are in src/scripts, and the reader can inspect the source code there. Each case study bears the name or letter or number with which it appears in the paper. To run a script, it is sufficient to have the present package installed as indicated above, and type in the REPL:
+The scripts for each case study are in `src/scripts`, and the reader can inspect the source code there. Each case study bears the name or letter or number with which it appears in the paper. To run a script, it is sufficient to have the present package and one or more solvers installed as indicated above. Once that is done, it is sufficient to type in the julia REPL:
 ```julia
-import SE_framework_paper_results
+import SE_framework_paper_results, Ipopt
 _SEF =  SE_framework_paper_results
 
 csv_result_path = "path/to/results_cs_A.csv" # the user needs to provide this string
-_SEF.run_case_study_A(csv_result_path)
+nlsolver = (Ipopt.Optimizer)
+_SEF.run_case_study_A(csv_result_path, nlsolver)
 ```
 (of course, you need to be in the environment where the package is installed).
 Note that some of the case studies run on > 100 networks, and therefore take a while.

@@ -1,4 +1,4 @@
-function run_case_study_C(path_to_result_csv, snlolver, linsolver; set_rescaler = 100, power_base::Float64=1e5)
+function run_case_study_C(path_to_result_csv, nlsolver, linsolver; set_rescaler = 100, power_base::Float64=1e5)
 
     # Input data
     rm_transfo = true
