@@ -25,7 +25,7 @@ function run_case_study_B(path_to_result_csv; solver::Any="ipopt", ipopt_lin_sol
                                                                 "print_level"=>0,
                                                                 "linear_solver"=>ipopt_lin_sol)
     else
-        pf_solver = _PMD.optimizer_with_attributes(solver)
+        pf_solver = _PMD.optimizer_with_attributes(solver...)
     end
 
     lin_se_solver = gurobi_lic ? _PMD.optimizer_with_attributes(Gurobi.Optimizer, "TimeLimit"=>180.0) : pf_solver

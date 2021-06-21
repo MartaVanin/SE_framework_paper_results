@@ -1,4 +1,4 @@
-function run_case_study_C(path_to_result_csv; ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5, gurobi_lic::Bool=false, set_rescaler = 100, power_base::Float64=1e5)
+function run_case_study_C(path_to_result_csv; nlsolver::Any="ipopt", ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5, gurobi_lic::Bool=false, set_rescaler = 100, power_base::Float64=1e5)
 
     # Input data
     rm_transfo = true
@@ -15,10 +15,14 @@ function run_case_study_C(path_to_result_csv; ipopt_lin_sol::String="mumps", tol
     msr_path = joinpath(mktempdir(),"temp.csv")
 
     # Set solve
-    solver = _PMD.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
-                                                            "tol"=>tolerance,
-                                                            "print_level"=>0,
-                                                            "linear_solver"=>ipopt_lin_sol)
+    if nlsolver == "ipopt"
+        solver = _PMD.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
+                                                                "tol"=>tolerance,
+                                                                "print_level"=>0,
+                                                                "linear_solver"=>ipopt_lin_sol)
+    else
+        solver = _PMD.optimizer_with_attributes(nlsolve...)
+    end
 
     lin_se_solver = gurobi_lic ? _PMD.optimizer_with_attributes(Gurobi.Optimizer, "TimeLimit"=>180.0) : solver
 

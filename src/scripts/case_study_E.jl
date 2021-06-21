@@ -1,9 +1,13 @@
-function run_case_study_E(;tolerance::Float64=1e-5, ipopt_lin_sol::String="mumps", power_base::Float64=1e5)
+function run_case_study_E(;tolerance::Float64=1e-5, nlsolver::Any="ipopt", ipopt_lin_sol::String="mumps", power_base::Float64=1e5)
 
-    solver = _PMD.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
-                                            "tol"=>tolerance,
-                                            "print_level"=>0,
-                                            "linear_solver"=>ipopt_lin_sol)
+    if nlsolver == "ipopt"
+        solver = _PMD.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
+                                                "tol"=>tolerance,
+                                                "print_level"=>0,
+                                                "linear_solver"=>ipopt_lin_sol)
+    else
+        solver = _PMD.optimizer_with_attributes(nlsolver...)
+    end
 
     msr_path = mktempdir()*"temp.csv"
 

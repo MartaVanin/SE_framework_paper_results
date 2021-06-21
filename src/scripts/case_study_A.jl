@@ -25,7 +25,7 @@ function run_case_study_A(path_to_result_csv::String; solver::Any="ipopt", ipopt
                                                                 "print_level"=>0,
                                                                 "linear_solver"=>ipopt_lin_sol)
     else
-        pf_solver = _PMD.optimizer_with_attributes(solver)
+        pf_solver = _PMD.optimizer_with_attributes(solver...)
     end
 
     se_solver = pf_solver

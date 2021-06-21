@@ -1,4 +1,4 @@
-function run_case_study_D(path_to_csv_result::String; ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5, power_base::Float64=1e5)
+function run_case_study_D(path_to_csv_result::String; nlsolver::Any="ipopt", ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5, power_base::Float64=1e5)
 
     # Input data
     rm_transfo = true
@@ -11,10 +11,14 @@ function run_case_study_D(path_to_csv_result::String; ipopt_lin_sol::String="mum
 
     msr_path = joinpath(mktempdir(),"temp.csv")
     # Set solve
-    solver = _PMD.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
-                                                            "tol"=>tolerance,
-                                                            "print_level"=>0,
-                                                            "linear_solver"=>ipopt_lin_sol)
+    if nlsolver == "ipopt"
+        solver = _PMD.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
+                                                                "tol"=>tolerance,
+                                                                "print_level"=>0,
+                                                                "linear_solver"=>ipopt_lin_sol)
+    else
+        solver = _PMD.optimizer_with_attributes(nlsolver)
+    end
 
     df = _DF.DataFrame(ntw=Int64[], fdr=Int64[], solve_time=Float64[], n_bus=Int64[],
                 termination_status=String[], objective=Float64[], criterion=String[], rescaler = Float64[], eq_model = String[],

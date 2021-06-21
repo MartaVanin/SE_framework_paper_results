@@ -1,6 +1,6 @@
 name = "SE_framework_paper_results"
 uuid = "8b8f23b3-505d-486a-8806-67ba6773cb57"
-version = "0.0.6"
+version = "0.0.7"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
