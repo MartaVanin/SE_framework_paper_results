@@ -1,5 +1,5 @@
 
-function run_case_study_A(path_to_result_csv::String; solver::Any="ipopt", ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5, set_rescaler::Int64 = 100, power_base::Float64=1e5)
+function run_case_study_A(path_to_result_csv::String, solver::Any; set_rescaler::Int64 = 100, power_base::Float64=1e5)
 
     # Input data
     models = [_PMDSE.ReducedIVRUPowerModel, _PMDSE.ReducedACRUPowerModel, _PMDSE.ReducedACPUPowerModel]
@@ -18,21 +18,19 @@ function run_case_study_A(path_to_result_csv::String; solver::Any="ipopt", ipopt
     # Set path
     msr_path = joinpath(mktempdir(),"temp.csv")
 
-    # Set solve
-    if solver == "ipopt"
-        pf_solver = _PMD.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
-                                                                "tol"=>tolerance,
-                                                                "print_level"=>0,
-                                                                "linear_solver"=>ipopt_lin_sol)
-    else
-        pf_solver = _PMD.optimizer_with_attributes(solver...)
-    end
+    pf_solver = _PMD.optimizer_with_attributes(solver...)
+
+    # DEFAULT OPTIONS WOULD BE:
+    # pf_solver = _PMD.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
+    # "tol"=>tolerance,
+    # "print_level"=>0,
+    # "linear_solver"=>ipopt_lin_sol)
 
     se_solver = pf_solver
 
     df = _DF.DataFrame(ntw=Int64[], fdr=Int64[], solve_time=Float64[], n_bus=Int64[],
     termination_status=String[], objective=Float64[], criterion=String[], rescaler = Float64[], eq_model = String[],
-            linear_solver = String[], tol = Any[], err_max_1=Float64[], err_max_2=Float64[], err_max_3=Float64[], err_avg_1 = Float64[], err_avg_2 = Float64[], err_avg_3 = Float64[])
+            err_max_1=Float64[], err_max_2=Float64[], err_max_3=Float64[], err_avg_1 = Float64[], err_avg_2 = Float64[], err_avg_3 = Float64[], pbase=Float64[])
 
     for i in 1:length(models)
         mod = models[i]
@@ -92,7 +90,7 @@ function run_case_study_A(path_to_result_csv::String; solver::Any="ipopt", ipopt
                 # store result
                 push!(df, [ntw, fdr, se_results["solve_time"], length(data["bus"]),
                         string(se_results["termination_status"]),
-                        se_results["objective"], criterion, set_rescaler, short, ipopt_lin_sol, tolerance, max_1, max_2, max_3, mean_1, mean_2, mean_3])
+                        se_results["objective"], criterion, set_rescaler, short, max_1, max_2, max_3, mean_1, mean_2, mean_3, power_base])
             end end #loop through feeder and network
         CSV.write(path_to_result_csv, df)
         end #criterion loop

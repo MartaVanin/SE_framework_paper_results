@@ -1,4 +1,4 @@
-function run_case_study_D(path_to_csv_result::String; nlsolver::Any="ipopt", ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5, power_base::Float64=1e5)
+function run_case_study_D(path_to_csv_result::String, nlsolver; power_base::Float64=1e5)
 
     # Input data
     rm_transfo = true
@@ -8,21 +8,15 @@ function run_case_study_D(path_to_csv_result::String; nlsolver::Any="ipopt", ipo
     time_step = 144
     elm = ["load", "pv"]
     pfs = [0.95, 0.90]
+    rsc = 100
 
     msr_path = joinpath(mktempdir(),"temp.csv")
     # Set solve
-    if nlsolver == "ipopt"
-        solver = _PMD.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
-                                                                "tol"=>tolerance,
-                                                                "print_level"=>0,
-                                                                "linear_solver"=>ipopt_lin_sol)
-    else
-        solver = _PMD.optimizer_with_attributes(nlsolver)
-    end
+    solver = _PMD.optimizer_with_attributes(nlsolver...)
 
     df = _DF.DataFrame(ntw=Int64[], fdr=Int64[], solve_time=Float64[], n_bus=Int64[],
                 termination_status=String[], objective=Float64[], criterion=String[], rescaler = Float64[], eq_model = String[],
-                        linear_solver = String[], tol = Any[], err_max_1=Float64[], err_max_2=Float64[], err_max_3=Float64[], err_avg_1 = Float64[], err_avg_2 = Float64[], err_avg_3 = Float64[])
+                     err_max_1=Float64[], err_max_2=Float64[], err_max_3=Float64[], err_avg_1 = Float64[], err_avg_2 = Float64[], err_avg_3 = Float64[], pbase=Float64[])
 
     # Load the data
     data = _PMD.parse_file(_PMDSE.get_enwl_dss_path(1, 1),data_model=_PMD.ENGINEERING);
@@ -63,7 +57,7 @@ function run_case_study_D(path_to_csv_result::String; nlsolver::Any="ipopt", ipo
 
     # Set se settings
     data["se_settings"] = Dict{String,Any}("criterion" => "rwlav",
-                            "rescaler" => 100)
+                            "rescaler" => rsc)
 
     load_ids = []
     bus_ids = []
@@ -106,7 +100,7 @@ function run_case_study_D(path_to_csv_result::String; nlsolver::Any="ipopt", ipo
         # store result
         push!(df, [ntw, fdr, se_results["solve_time"], length(data["bus"]),
                 string(se_results["termination_status"]),
-                se_results["objective"], "rwlav", 100, "rIVR", ipopt_lin_sol, tolerance, max_1, max_2, max_3, mean_1, mean_2, mean_3])
+                se_results["objective"], "rwlav", rsc, "rIVR", max_1, max_2, max_3, mean_1, mean_2, mean_3, power_base])
         
         push!(delete_bus, data["meas"][meas_ids[3*(i-1)+1]]["cmp_id"])
         delete!(data["meas"], meas_ids[3*(i-1)+1])

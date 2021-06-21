@@ -1,13 +1,6 @@
-function run_case_study_E(;tolerance::Float64=1e-5, nlsolver::Any="ipopt", ipopt_lin_sol::String="mumps", power_base::Float64=1e5)
+function run_case_study_E(nlsolver; power_base::Float64=1e5)
 
-    if nlsolver == "ipopt"
-        solver = _PMD.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
-                                                "tol"=>tolerance,
-                                                "print_level"=>0,
-                                                "linear_solver"=>ipopt_lin_sol)
-    else
-        solver = _PMD.optimizer_with_attributes(nlsolver...)
-    end
+    solver = _PMD.optimizer_with_attributes(nlsolver...)
 
     msr_path = mktempdir()*"temp.csv"
 
@@ -51,7 +44,7 @@ function run_case_study_E(;tolerance::Float64=1e-5, nlsolver::Any="ipopt", ipopt
     # Read-in measurement data and set initial values
     _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 2)
 
-    df = _DF.DataFrame(form=String[], resc = [], tol = [], crit = [], nobd_obj = [], nobd_conv=[], bd_obj = [], bd_conv = [], lin_solv=[], power_base=[])
+    df = _DF.DataFrame(form=String[], resc = [], crit = [], nobd_obj = [], nobd_conv=[], bd_obj = [], bd_conv = [], power_base=[])
 
     for rsc in [1, 10, 100 ,1000, 10000, 100000]
         for crit in ["rwls", "wlav", "rwlav", "wls"]
@@ -73,9 +66,9 @@ function run_case_study_E(;tolerance::Float64=1e-5, nlsolver::Any="ipopt", ipopt
             se_result_ivr_bd = _PMDSE.solve_ivr_red_mc_se(bad_data, solver)
             se_result_acp_bd = _PMDSE.solve_acp_red_mc_se(bad_data, solver)
 
-            push!(df, ["acr", rsc, tolerance, crit, se_result_acr["objective"], se_result_acr["termination_status"], se_result_acr_bd["objective"], se_result_acr_bd["termination_status"], ipopt_lin_sol, power_base])
-            push!(df, ["acp", rsc, tolerance, crit, se_result_acp["objective"], se_result_acp["termination_status"], se_result_acp_bd["objective"], se_result_acp_bd["termination_status"], ipopt_lin_sol, power_base])
-            push!(df, ["ivr", rsc, tolerance, crit, se_result_ivr["objective"], se_result_ivr["termination_status"], se_result_ivr_bd["objective"], se_result_ivr_bd["termination_status"], ipopt_lin_sol, power_base])
+            push!(df, ["acr", rsc, crit, se_result_acr["objective"], se_result_acr["termination_status"], se_result_acr_bd["objective"], se_result_acr_bd["termination_status"], power_base])
+            push!(df, ["acp", rsc, crit, se_result_acp["objective"], se_result_acp["termination_status"], se_result_acp_bd["objective"], se_result_acp_bd["termination_status"], power_base])
+            push!(df, ["ivr", rsc, crit, se_result_ivr["objective"], se_result_ivr["termination_status"], se_result_ivr_bd["objective"], se_result_ivr_bd["termination_status"], power_base])
             
             #excds, obj, trsh = _PMDSE.exceeds_chi_squares_threshold(se_result_bd, bad_data, rescaler = rsc) #if excds = true, the chi-square test indicate that there are bad data
         end

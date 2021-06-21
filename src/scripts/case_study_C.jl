@@ -1,4 +1,4 @@
-function run_case_study_C(path_to_result_csv; nlsolver::Any="ipopt", ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5, gurobi_lic::Bool=false, set_rescaler = 100, power_base::Float64=1e5)
+function run_case_study_C(path_to_result_csv, snlolver, linsolver; set_rescaler = 100, power_base::Float64=1e5)
 
     # Input data
     rm_transfo = true
@@ -15,20 +15,12 @@ function run_case_study_C(path_to_result_csv; nlsolver::Any="ipopt", ipopt_lin_s
     msr_path = joinpath(mktempdir(),"temp.csv")
 
     # Set solve
-    if nlsolver == "ipopt"
-        solver = _PMD.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
-                                                                "tol"=>tolerance,
-                                                                "print_level"=>0,
-                                                                "linear_solver"=>ipopt_lin_sol)
-    else
-        solver = _PMD.optimizer_with_attributes(nlsolve...)
-    end
+    solver = _PMD.optimizer_with_attributes(nlsolver...)
 
-    lin_se_solver = gurobi_lic ? _PMD.optimizer_with_attributes(Gurobi.Optimizer, "TimeLimit"=>180.0) : solver
+    lin_se_solver = _PMD.optimizer_with_attributes(linsolver...)# _PMD.optimizer_with_attributes(Gurobi.Optimizer, "TimeLimit"=>180.0)
 
     df = _DF.DataFrame(ntw=Int64[], fdr=Int64[], solve_time=Float64[], n_bus=Int64[],
-    termination_status=String[], objective=Float64[], criterion=String[], rescaler = Float64[], eq_model = String[],
-            solver = String[], tol = Any[])
+    termination_status=String[], objective=Float64[], criterion=String[], rescaler = Float64[], eq_model = String[], pbase=Float64[])
 
     for ntw in 1:25 for fdr in 1:10
         data_path = _PMDSE.get_enwl_dss_path(ntw, fdr)
@@ -74,11 +66,11 @@ function run_case_study_C(path_to_result_csv; nlsolver::Any="ipopt", ipopt_lin_s
         # PRINT
         push!(df, [ntw, fdr, linear_se_results["solve_time"], length(data["bus"]),
                 string(linear_se_results["termination_status"]),
-                linear_se_results["objective"], "rwlav", set_rescaler, "linIVR", string(lin_se_solver.optimizer_constructor)[1:end-9], tolerance])
+                linear_se_results["objective"], "rwlav", set_rescaler, "linIVR", power_base])
 
         push!(df, [ntw, fdr, se_results["solve_time"], length(data["bus"]),
                 string(se_results["termination_status"]),
-                se_results["objective"], "rwlav", set_rescaler, "rIVR", ipopt_lin_sol, tolerance])
+                se_results["objective"], "rwlav", set_rescaler, "rIVR", power_base])
 
     end end #loop through feeder and network
     CSV.write(path_to_result_csv, df)
