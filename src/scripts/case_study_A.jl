@@ -1,5 +1,5 @@
 
-function run_case_study_A(path_to_result_csv::String; ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5, set_rescaler::Int64 = 100, power_base::Float64=1e5)
+function run_case_study_A(path_to_result_csv::String; solver::Any="ipopt", ipopt_lin_sol::String="mumps", tolerance::Float64=1e-5, set_rescaler::Int64 = 100, power_base::Float64=1e5)
 
     # Input data
     models = [_PMDSE.ReducedIVRUPowerModel, _PMDSE.ReducedACRUPowerModel, _PMDSE.ReducedACPUPowerModel]
@@ -19,10 +19,14 @@ function run_case_study_A(path_to_result_csv::String; ipopt_lin_sol::String="mum
     msr_path = joinpath(mktempdir(),"temp.csv")
 
     # Set solve
-    pf_solver = _PMD.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
-                                                            "tol"=>tolerance,
-                                                            "print_level"=>0,
-                                                            "linear_solver"=>ipopt_lin_sol)
+    if solver == "ipopt"
+        pf_solver = _PMD.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
+                                                                "tol"=>tolerance,
+                                                                "print_level"=>0,
+                                                                "linear_solver"=>ipopt_lin_sol)
+    else
+        pf_solver = _PMD.optimizer_with_attributes(solver)
+    end
 
     se_solver = pf_solver
 
