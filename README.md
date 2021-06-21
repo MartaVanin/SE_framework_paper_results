@@ -32,9 +32,9 @@ to obtain a spcific version of Ipopt (or any other package):
 ```
 Ipopt can be used also to solve the linear problems that are present in the scripts. However, for these problems Ipopt is largely outperformed by other linear solvers, e.g., Gurobi.
 If you have a Gurobi license (easily available for academics), we recommend that you use that.
-In general, any solver compatible with JuMP can be used. See the available solvers and which problem classes they can solve [here](https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers).
+In general, any solver compatible with JuMP can be used. See the available solvers and which problem classes they can solve [here](https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers). Typically, specific indications on how to install a solver and/or its license can be found in its `README.md`.
 
-## How to run the script for a case study
+## How to run a script for a case study
 
 The scripts for each case study are in `src/scripts`, and the reader can inspect the source code there. Each case study bears the name or letter or number with which it appears in the paper. To run a script, it is sufficient to have the present package and one or more solvers installed as indicated above. Once that is done, it is sufficient to type in the julia REPL:
 ```julia
@@ -45,19 +45,31 @@ csv_result_path = "path/to/results_cs_A.csv" # the user needs to provide this st
 nlsolver = (Ipopt.Optimizer)
 _SEF.run_case_study_A(csv_result_path, nlsolver)
 ```
-(of course, you need to be in the environment where the package is installed).
+(of course, you need to be in the environment where the packages are installed).
 Note that some of the case studies run on > 100 networks, and therefore take a while.
 
-Also note that `run_case_study_` functions have only one "compulsory" argument, which is the path to the csv result file. Some optional arguments, which take the default value if the user does not enter them explicitly, can also be used. These are some solver parameters:
-- rescaler (`set_rescaler`): default value = 100, recommended value = default
-- underlying linear solver for ipopt (`ipopt_lin_sol`): default value = "mumps", recommended value = "MA27"
-- solver tolerance (`tolerance`): default value = 1.0e-5, recommended value = default
-- Gurobi license (`gurobi_lic`): default value = `false`, recommended = `true`
+### Arguments for case study functions
 
-### Recommended solvers and settings
+Script functions `run_case_study_*` have some "compulsory" and some "optional" arguments. In the function definitions within `src/scripts`, these are separated by a semicolon. Compulsory arguments have to be provided by the user. Optional arguments can be provided by the user, and otherwise take the default value assigned in the function definition. For example, the definition of `run_case_study_A` is:
+```
+function run_case_study_A(path_to_result_csv::String, solver::Any; set_rescaler::Int64 = 100, power_base::Float64=1e5)
+```
+where
+- `path_to_result_csv`, and `solver` are compulsory arguments, whereas,
+- `set_rescaler` and `power_base` are optional and have as default value `100` and `1e5`, respectively.
 
-Specifically, it is 
+Below, an explanation of all the arguments of all the case study functions (not all arguments are needed in all functions, e.g., `linsolver` is not used in `run_case_study_A`, where there are no linear optimization problems). Please have a look at the source code and at the section below to see which functions uses which arguments:
 
-### NOTE
+- `path_to_result_csv`:
+- `nlsolver`:
+- `linsolver`:
+- `set_rescaler`:
+- `power_base`:
+
+
+### Argument values used in the original paper calculations
+
+TODO!!!!
+
 1) Case study B and C work best with Gurobi. However, if you do not have a license, it can be set to call back to ipopt, even though the latter is not the fastest linear program solver. 
 2) Ipopt needs and underlying linear solver. The default one is "mumps", while the recommended one to solve these se problems is "ma27", by HSL. However, this also requires a license. If the user does not have it, they can set `lin_sol` to "mumps"

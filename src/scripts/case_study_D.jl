@@ -14,7 +14,7 @@ function run_case_study_D(path_to_csv_result::String, nlsolver; power_base::Floa
     # Set solve
     solver = _PMD.optimizer_with_attributes(nlsolver...)
 
-    df = _DF.DataFrame(ntw=Int64[], fdr=Int64[], solve_time=Float64[], n_bus=Int64[],
+    df = _DF.DataFrame(solve_time=Float64[], n_bus=Int64[],
                 termination_status=String[], objective=Float64[], criterion=String[], rescaler = Float64[], eq_model = String[],
                      err_max_1=Float64[], err_max_2=Float64[], err_max_3=Float64[], err_avg_1 = Float64[], err_avg_2 = Float64[], err_avg_3 = Float64[], pbase=Float64[])
 
@@ -98,7 +98,7 @@ function run_case_study_D(path_to_csv_result::String, nlsolver; power_base::Floa
         delta_1, delta_2, delta_3, max_1, max_2, max_3, mean_1, mean_2, mean_3 = _SEF.calculate_voltage_magnitude_error_perphase(se_results, pf_results)
 
         # store result
-        push!(df, [ntw, fdr, se_results["solve_time"], length(data["bus"]),
+        push!(df, [se_results["solve_time"], length(data["bus"]),
                 string(se_results["termination_status"]),
                 se_results["objective"], "rwlav", rsc, "rIVR", max_1, max_2, max_3, mean_1, mean_2, mean_3, power_base])
         

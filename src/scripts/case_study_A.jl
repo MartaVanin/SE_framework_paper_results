@@ -1,5 +1,5 @@
 
-function run_case_study_A(path_to_result_csv::String, solver::Any; set_rescaler::Int64 = 100, power_base::Float64=1e5)
+function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescaler::Int64 = 100, power_base::Float64=1e5)
 
     # Input data
     models = [_PMDSE.ReducedIVRUPowerModel, _PMDSE.ReducedACRUPowerModel, _PMDSE.ReducedACPUPowerModel]
@@ -18,7 +18,7 @@ function run_case_study_A(path_to_result_csv::String, solver::Any; set_rescaler:
     # Set path
     msr_path = joinpath(mktempdir(),"temp.csv")
 
-    pf_solver = _PMD.optimizer_with_attributes(solver...)
+    pf_solver = _PMD.optimizer_with_attributes(nlsolver...)
 
     # DEFAULT OPTIONS WOULD BE:
     # pf_solver = _PMD.optimizer_with_attributes(Ipopt.Optimizer,"max_cpu_time"=>180.0,
