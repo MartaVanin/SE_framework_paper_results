@@ -1,6 +1,5 @@
 module SE_framework_paper_results
 
-import Ipopt, Gurobi
 import DataFrames, CSV, Distributions
 import PowerModelsDistribution
 import PowerModelsDistributionStateEstimation
