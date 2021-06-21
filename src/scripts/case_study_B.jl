@@ -70,7 +70,7 @@ function run_case_study_B(path_to_result_csv; ipopt_lin_sol::String="mumps", tol
                                 "bus"  => σ_v)
                                         )                
 
-                _PMDSE.write_measurements!(_PMD.ACPUPowerModel, data, pf_results, msr_path, σ_dict)
+                _PMDSE.write_measurements!(_PMD.ACPUPowerModel, data, pf_results, msr_path, σ = σ_dict)
 
                 # Read-in measurement data and set initial values
                 _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 2)
