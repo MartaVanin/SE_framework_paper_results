@@ -1,4 +1,4 @@
-function run_case_study_D(path_to_csv_result::String, nlsolver; power_base::Float64=1e5)
+function run_case_study_D(path_to_csv_result::String, nlsolver; power_base::Float64=1e5, rsc::Int64=100)
 
     # Input data
     rm_transfo = true
@@ -8,7 +8,6 @@ function run_case_study_D(path_to_csv_result::String, nlsolver; power_base::Floa
     time_step = 144
     elm = ["load", "pv"]
     pfs = [0.95, 0.90]
-    rsc = 100
 
     msr_path = joinpath(mktempdir(),"temp.csv")
     # Set solve
@@ -16,7 +15,7 @@ function run_case_study_D(path_to_csv_result::String, nlsolver; power_base::Floa
 
     df = _DF.DataFrame(solve_time=Float64[], n_bus=Int64[],
                 termination_status=String[], objective=Float64[], criterion=String[], rescaler = Float64[], eq_model = String[],
-                     err_max_1=Float64[], err_max_2=Float64[], err_max_3=Float64[], err_avg_1 = Float64[], err_avg_2 = Float64[], err_avg_3 = Float64[], pbase=Float64[])
+                     err_max_1=Float64[], err_max_2=Float64[], err_max_3=Float64[], err_avg_1 = Float64[], err_avg_2 = Float64[], err_avg_3 = Float64[], n_meas = Float64[], pbase=Float64[])
 
     # Load the data
     data = _PMD.parse_file(_PMDSE.get_enwl_dss_path(1, 1),data_model=_PMD.ENGINEERING);
@@ -100,7 +99,7 @@ function run_case_study_D(path_to_csv_result::String, nlsolver; power_base::Floa
         # store result
         push!(df, [se_results["solve_time"], length(data["bus"]),
                 string(se_results["termination_status"]),
-                se_results["objective"], "rwlav", rsc, "rIVR", max_1, max_2, max_3, mean_1, mean_2, mean_3, power_base])
+                se_results["objective"], "rwlav", rsc, "rIVR", max_1, max_2, max_3, mean_1, mean_2, mean_3, length(data["meas"]), power_base])
         
         push!(delete_bus, data["meas"][meas_ids[3*(i-1)+1]]["cmp_id"])
         delete!(data["meas"], meas_ids[3*(i-1)+1])

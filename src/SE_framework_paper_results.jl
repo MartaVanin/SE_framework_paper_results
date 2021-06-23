@@ -1,8 +1,9 @@
 module SE_framework_paper_results
 
-import DataFrames, CSV, Distributions
+import DataFrames, CSV, Distributions, Query
 import PowerModelsDistribution
 import PowerModelsDistributionStateEstimation
+import Plots
 import Statistics
 
 # Define Pkg cte
@@ -13,7 +14,7 @@ const _PMDSE = PowerModelsDistributionStateEstimation
 const _SEF = SE_framework_paper_results
 const _STT = Statistics
 
-include("plotting/clean_plots.jl")
+include("plotting/all_plots.jl")
 
 include("scripts/case_study_A.jl")
 include("scripts/case_study_B.jl")

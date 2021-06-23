@@ -34,7 +34,7 @@ function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set
         short = abbreviation[i]
 
         for criterion in criteria
-            for ntw in 1:25 for fdr in 1:10
+            for ntw in 1:1 for fdr in 1:2
                 data_path = _PMDSE.get_enwl_dss_path(ntw, fdr)
                 if !isdir(dirname(data_path)) break end
 
@@ -83,11 +83,10 @@ function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set
                 if mod == _PMD.LinDist3FlowPowerModel
                     _PMDSE.vm_to_w_conversion!(data)
                     se_results = _PMDSE.solve_mc_se(data, mod, lin_se_solver)
-                    chosen_solver = string(lin_se_solver)[1:end-9]
                 else
                     se_results = _PMDSE.solve_mc_se(data, mod, pf_solver)
-                    chosen_solver = ipopt_lin_sol
                 end
+
                 delta_1, delta_2, delta_3, max_1, max_2, max_3, mean_1, mean_2, mean_3 = _SEF.calculate_voltage_magnitude_error_perphase(se_results, pf_results)
 
                 # store result
