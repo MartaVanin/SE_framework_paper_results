@@ -94,7 +94,7 @@ function run_case_study_D(path_to_csv_result::String, nlsolver; power_base::Floa
             end
         end
 
-        delta_1, delta_2, delta_3, max_1, max_2, max_3, mean_1, mean_2, mean_3 = _SEF.calculate_voltage_magnitude_error_perphase(se_results, pf_results)
+        delta_1, delta_2, delta_3, max_1, max_2, max_3, mean_1, mean_2, mean_3 = _PMDSE.calculate_voltage_magnitude_error_perphase(se_results, pf_results)
 
         # store result
         push!(df, [se_results["solve_time"], length(data["bus"]),

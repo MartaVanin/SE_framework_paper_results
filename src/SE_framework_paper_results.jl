@@ -3,6 +3,7 @@ module SE_framework_paper_results
 import DataFrames, CSV, Distributions, Query
 import PowerModelsDistribution
 import PowerModelsDistributionStateEstimation
+import Plots: savefig
 import Plots
 import Statistics
 
@@ -22,10 +23,9 @@ include("scripts/case_study_C.jl")
 include("scripts/case_study_D.jl")
 include("scripts/case_study_E.jl")
 
-include("utils/io_utils.jl")
 include("utils/linear_ivr_functions.jl")
 
-export calculate_voltage_magnitude_error_perphase
 export run_case_study_A, run_case_study_B, run_case_study_C, run_case_study_D, run_case_study_E
+export savefig # so users do not have to install plots to save their figures
 
 end

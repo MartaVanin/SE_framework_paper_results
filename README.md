@@ -75,3 +75,21 @@ TODO!!!!
 2) Ipopt needs and underlying linear solver. The default one is "mumps", while the recommended one to solve these se problems is "ma27", by HSL. However, this also requires a license. If the user does not have it, they can set `lin_sol` to "mumps"
 
 ## Plot the results
+
+The scripts for plotting results can be found in `src/plotting`. For the sake of clarity, every case study has its own plotting function. 
+
+All plotting functions have as first argument the path to the csv file where the results of the case study is stored. If you want to use the csv files that are also used in the paper, these can be found in the `\result_file` folder. E.g.,
+```julia
+using SE_framework_paper_results
+
+plot_result_caseC("../result_files/case_study_C.csv")
+
+```
+To save the last produced plot to your machine, you can use the savefig function: `savefig("path/to/savedplot/picture_title.PNG")`. Changing the extension to e.g. `pdf` instead of `png` returns a pdf file, and so on.
+
+Of course, you can produce your own results and plot those, as running case studies automatically returns a csv file which is compatible with the plotting functions.
+
+Some case studies, like case study C and D, only have one plot (like in the paper), i.e., solve time or measurement errors. In the case of cases with multiple possible plots, users can specify which ones they want via the second function argument.
+
+
+TODO!!! default y limits
