@@ -34,7 +34,7 @@ function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set
         short = abbreviation[i]
 
         for criterion in criteria
-            for ntw in 1:1 for fdr in 1:2
+            for ntw in 1:25 for fdr in 1:10
                 data_path = _PMDSE.get_enwl_dss_path(ntw, fdr)
                 if !isdir(dirname(data_path)) break end
 

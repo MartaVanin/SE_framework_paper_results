@@ -39,130 +39,131 @@ function run_case_study_E(nlsolver)
     _PMDSE.write_measurements!(_PMD.ACPUPowerModel, data, pf_results, msr_path, σ = σ_dict)
 
     # Read-in measurement data and set initial values
-    _PMDSE.add_measurements!(data, msr_path, actual_meas = true, seed = 2)
+    _PMDSE.add_measurements!(data, msr_path, actual_meas = true)
+
     data["se_settings"] = Dict{String,Any}("criterion" => "rwlav",
-                                            "rescaler" => 1)
+                                            "rescaler" => 100)
 
     _PMDSE.assign_start_to_variables!(data)
     _PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-1.0, pg_max = 1.0, qg_min=-1.0, qg_max=1.0, pd_min=-1.0, pd_max=1.0, qd_min=-1.0, qd_max=1.0 )
 
-    se_result = _PMDSE.solve_acp_red_mc_se(data, solver)
-
     ###############################################################
     ######                                                    #####
-    ######    ADD BAD DATA AND RUN STATE ESTIMATION AGAIN     #####
-    ######     comment out single lines in 60-62 for the      #####
-    ######       different cases: bad voltage, P and Q        #####
-    ###############################################################
-
-    bad_data = deepcopy(data)
-    # bad_data_point = ("28", 0.02, σ_p)
-    # bad_data_point = ("53", 0.029, σ_p)
-     bad_data_point = ("81", 1.005, σ_v)
-    bad_data["meas"][bad_data_point[1]]["dst"] = [_DST.Normal(bad_data_point[2], bad_data_point[3])]
-
-    se_result_bd = _PMDSE.solve_acp_red_mc_se(bad_data, solver)
-
-    ###############################################################
-    ######                                                    #####
-    ######                Chi-SQUARE ANALYSIS                 #####
+    ######      ADD BAD DATA AND RUN STATE ESTIMATION         #####
     ######                                                    #####
     ###############################################################
 
-    # FIRST WITHOUT BAD DATA, TO CHECK THAT NO BAD DATA ARE DETECTED #
-    excds, obj, trsh = _PMDSE.exceeds_chi_squares_threshold(se_result, data, suppress_display=true)
+    bad_data_lav = deepcopy(data)
+    bad_data_lav["meas"]["43"]["dst"] = [_DST.Normal(0.019, σ_p)]
+    bad_data_lav["meas"]["53"]["dst"] = [_DST.Normal(0.01, σ_p)]
+    bad_data_lav["meas"]["33"]["dst"] = [_DST.Normal(1.01, σ_v)]
 
-    if !excds
-        display("The objective of ACP state estimation WITHOUT bad data is $(obj), and does not exceed the Chi-square threshold of $trsh. Thus, no bad data detected (correct).")
-    else
-        display("The objective of ACP state estimation WITHOUT bad data is $(obj), and exceeds the Chi-square threshold of $trsh. This result does not match the paper result. Please check the code/package settings, or try to ask the authors.")
+    bad_data_chi = deepcopy(bad_data_lav)
+    bad_data_lnr = deepcopy(bad_data_lav)
+
+    bad_data_lav["se_settings"] = Dict{String,Any}("criterion" => "rwlav",
+    "rescaler" => 1)
+
+    for (m, meas) in bad_data_lav["meas"]
+        σ = [1.0, 1.0, 1.0]
+        μ = _DST.mean.(meas["dst"])
+        meas["dst"] = [_DST.Normal(μ[i], σ[i]) for i in 1:length(meas["dst"])]
     end
 
-    # NOW WITH BAD DATA #
-    excds_bd, obj_bd, trsh_bd = _PMDSE.exceeds_chi_squares_threshold(se_result_bd, bad_data, suppress_display=true) 
+    deleted_data_points_lav = []
+    for i in 1:4 # runs SE+chi square test+lav 4 times, three of which have a bad data point, the last one has no bad data (see paper)
 
-    if excds_bd
-        display("The objective of ACP state estimation WITH bad data is $(obj_bd), and exceeds the Chi-square threshold of $trsh_bd. Bad data detected.")
-    else
-        display("The objective of ACP state estimation WITH bad data is $(obj_bd), and does not exceed the Chi-square threshold of $trsh_bd. This result does not match the paper result. Please check the code/package settings, or try to ask the authors.")
+        bad_data_n = [3, 2, 1, "no"]
+        display("Now running SE with Chi-squares and LAV for the $i time. There are now $(bad_data_n[i]) bad data points.")
+
+        ###############################################################
+        ######                                                    #####
+        ######                Chi-SQUARE ANALYSIS                 #####
+        ######                                                    #####
+        ###############################################################
+
+        # NB: bad_data_chi and bad_data_lav are identical except for the SE settings: all weights are 1 in bad_data_lav, but that assumption won't work with chi square analysis
+        se_result_bd = _PMDSE.solve_acp_red_mc_se(bad_data_chi, solver)
+        
+        excds_bd, obj_bd, trsh_bd = _PMDSE.exceeds_chi_squares_threshold(se_result_bd, bad_data_chi, suppress_display=true) 
+
+        if excds_bd
+            display("The objective of ACP state estimation WITH bad data is $(obj_bd), and exceeds the Chi-square threshold of $trsh_bd. Bad data detected.")
+        else
+            display("The objective of ACP state estimation WITH bad data is $(obj_bd), and does not exceed the Chi-square threshold of $trsh_bd.")
+        end
+
+        ###############################################################
+        ######                                                    #####
+        ###### LAV ESTIMATION AND HIGHEST RESIDUAL IDENTIFICATION #####
+        ######                                                    #####
+        ###############################################################
+
+        se_result_bd_lav = _PMDSE.solve_acp_red_mc_se(bad_data_lav, solver)
+        residual_tuples = [(m, maximum(meas["res"])[1]) for (m, meas) in se_result_bd_lav["solution"]["meas"]]
+        sorted_tuples = sort(residual_tuples, by = last, rev = true)
+
+        delete!(bad_data_lav["meas"], first(sorted_tuples[1]))
+        delete!(bad_data_chi["meas"], first(sorted_tuples[1]))
+        push!(deleted_data_points_lav, first(sorted_tuples[1]))
+
+        display("The largest residuals and their relative measurement number are the following:")
+        display(sorted_tuples[1:4])
+
     end
 
-    ###############################################################
-    ######                                                    #####
-    ###### LAV ESTIMATION AND HIGHEST RESIDUAL IDENTIFICATION #####
-    ######                                                    #####
-    ###############################################################
+    deleted_data_points_lnr = []
+    for i in 1:4 # runs LNR 4 times, three of which have a bad data point, the last one has no bad data (see paper)
 
-    bad_data["se_settings"] = Dict{String,Any}("criterion" => "lav",
-                                            "rescaler" => 1)
+        bad_data_n = [3, 2, 1, "no"]
+        display("Now running SE + LNR for the $i time. There are now $(bad_data_n[i]) bad data points.")
+        se_result_bd = _PMDSE.solve_acp_red_mc_se(bad_data_lnr, solver)
 
-    se_result_bd_lav = _PMDSE.solve_acp_red_mc_se(bad_data, solver)
-    residual_tuples = [(m, maximum(meas["res"])[1]) for (m, meas) in se_result_bd_lav["solution"]["meas"]]
-    sorted_tuples = sort(residual_tuples, by = last, rev = true)
+        ###############################################################
+        ######                                                    #####
+        ######           LARGEST NORMALIZED RESIDUALS             #####
+        ######                                                    #####
+        ###############################################################
 
-    if first(sorted_tuples[1]) == bad_data_point[1]
-        display("The LAV state estimation with bad data finds that measurement $(bad_data_point[1]) has the highest residual: $(last(sorted_tuples[1])), which is $(last(sorted_tuples[1])/last(sorted_tuples[2])) times larger than the second largest residual. Bad data point correctly identified.")
-    else
-        display("The LAV state estimation with bad data finds that measurement $(first(sorted_tuples[1])) has the largest residual. This is wrong and does not match the paper result. Please check the code/package settings, or try to ask the authors.")
+        max_meas_idx = maximum([parse(Int64, m) for (m,meas) in data["meas"]])
+
+        _PMDSE.add_zib_virtual_meas!(bad_data_lnr, 1e-15, exclude = [2, 1, 30, 48, 36])   
+        for (_, load) in bad_data_lnr["load"]
+            load["status"] = 1 
+            if !haskey(load, "connections") load["connections"] = [1,2,3] end
+        end
+        
+        variable_dict = _PMDSE.build_variable_dictionary(bad_data_lnr)
+        h_array = _PMDSE.build_measurement_function_array(bad_data_lnr, variable_dict)
+        state_array = _PMDSE.build_state_array(se_result_bd, variable_dict)
+
+        H = _PMDSE.build_H_matrix(h_array, state_array)
+        R = _PMDSE.build_R_matrix(bad_data_lnr)
+        G = _PMDSE.build_G_matrix(H, R)
+        K = _PMDSE.build_K_matrix(H, G, R)
+        S = _PMDSE.build_S_matrix(K)
+        Ω = _PMDSE.build_omega_matrix(S, R)
+
+        for (m,meas) in bad_data_lnr["meas"]
+            if parse(Int64, m) > max_meas_idx delete!(bad_data_lnr["meas"], m) end
+        end
+
+        id_val, exc = _PMDSE.normalized_residuals(bad_data_lnr, se_result_bd, Ω)
+        lnr_tuples = [(m, maximum(se_result_bd["solution"]["meas"][m]["nr"])[1]) for (m, meas) in bad_data_lnr["meas"]]
+        sorted_lnr_tuples = sort(lnr_tuples, by = last, rev = true)
+
+        push!(deleted_data_points_lnr, first(id_val))
+        bad_data_lnr = deepcopy(data)
+        bad_data_lnr["meas"]["43"]["dst"] = [_DST.Normal(0.019, σ_p)]
+        bad_data_lnr["meas"]["53"]["dst"] = [_DST.Normal(0.01, σ_p)]
+        bad_data_lnr["meas"]["33"]["dst"] = [_DST.Normal(1.01, σ_v)]    
+        for m in deleted_data_points_lnr
+            delete!(bad_data_lnr["meas"], m)
+        end
+
+        display("The largest normalizes residuals and their relative measurement number are the following:")
+        display(sorted_lnr_tuples[1:4])
+        display("If bigger than 3, the first LNR is deleted.")
+
     end
-
-    ###############################################################
-    ######                                                    #####
-    ######           LARGEST NORMALIZED RESIDUALS             #####
-    ######                                                    #####
-    ###############################################################
-
-    ## FIRST WITHOUT BAD DATA ##
-
-    _PMDSE.add_zib_virtual_meas!(data, 1e-15, exclude = [2, 1, 30, 48, 36])
-    for (l, load) in data["load"]
-        load["status"] = 1 
-        if !haskey(load, "connections") load["connections"] = [1,2,3] end
-    end
-    _PMDSE.add_zib_virtual_residuals!(se_result, data)
-    variable_dict = _PMDSE.build_variable_dictionary(data)
-    h_array = _PMDSE.build_measurement_function_array(data, variable_dict)
-    state_array = _PMDSE.build_state_array(se_result, variable_dict)
-
-    H = _PMDSE.build_H_matrix(h_array, state_array)
-    R = _PMDSE.build_R_matrix(data)
-    G = _PMDSE.build_G_matrix(H, R)
-    Ω = _PMDSE.build_omega_matrix(R, H, G)
-
-    id_val, exc = _PMDSE.normalized_residuals(data, se_result, Ω)    
-
-    if !exc
-        display("The largest normalized residual method does not detect bad data in this case. This is correct at this stage.")
-    else
-        display("Largest normalized residuals detect bad data but there are not. This is not the expected result.")
-    end
-
-    ## THEN WITH BAD DATA ##
-
-    _PMDSE.add_zib_virtual_meas!(bad_data, 1e-15, exclude = [2, 1, 30, 48, 36])   
-    for (l, load) in bad_data["load"]
-        load["status"] = 1 
-        if !haskey(load, "connections") load["connections"] = [1,2,3] end
-    end
-    _PMDSE.add_zib_virtual_residuals!(se_result_bd, bad_data)
-    
-    variable_dict = _PMDSE.build_variable_dictionary(bad_data)
-    h_array = _PMDSE.build_measurement_function_array(bad_data, variable_dict)
-    state_array = _PMDSE.build_state_array(se_result_bd, variable_dict)
-
-    H = _PMDSE.build_H_matrix(h_array, state_array)
-    R = _PMDSE.build_R_matrix(bad_data)
-    G = _PMDSE.build_G_matrix(H, R)
-    Ω = _PMDSE.build_omega_matrix(R, H, G)
-
-    id_val, exc = _PMDSE.normalized_residuals(bad_data,se_result_bd, Ω)
-
-    if !exc 
-        display("The largest normalized residual method does not detect bad data in this case. This is not correct and is not the expected result.")
-    elseif id_val[1] != bad_data_point[1]
-        display("Largest normalized residuals detect bad data but thinks the bad data point is $(id_val[1]) instead of $(bad_data_point[1]). This is not correct and is not the expected result.")
-    else
-        display("Largest normalized residuals correctly detects that $(bad_data_point[1]) is a bad data point.")
-    end
-
 end
