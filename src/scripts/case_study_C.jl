@@ -55,7 +55,6 @@ function run_case_study_C(path_to_result_csv, nlsolver, linsolver; set_rescaler 
         _PMDSE.write_measurements!(_PMD.ACPUPowerModel, data, pf_results_nl, msr_path)
         _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 1)
         _PMDSE.assign_start_to_variables!(data)
-        _PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-1.0, pg_max = 1.0, qg_min=-1.0, qg_max=1.0, pd_min=-1.0, pd_max=1.0, qd_min=-1.0, qd_max=1.0 )
 
         # Set se settings
         data["se_settings"] = Dict{String,Any}("criterion" => "rwlav",

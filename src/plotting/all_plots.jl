@@ -1,4 +1,15 @@
-function plot_result_caseA(path_to_caseA_csv::String, which_plot::String)
+"""
+Default ylims values:
+For "time" plot
+ymin: 0.01, ymax: 180
+For "error_ph1"
+ymin:0.0, ymax:0.003
+For "error_ph2"
+ymin:0.0, ymax:0.001
+For "error_ph3"
+ymin:0.0, ymax:0.006
+"""
+function plot_result_caseA(path_to_caseA_csv::String, which_plot::String, ymin::Float64, ymax::Float64)
 
     casea = CSV.read(path_to_caseA_csv)
 
@@ -18,29 +29,23 @@ function plot_result_caseA(path_to_caseA_csv::String, which_plot::String)
     ACR_df_rwlav = casea_rwlav |> Query.@filter(_.eq_model .== "rACR") |> DataFrames.DataFrame
     IVR_df_rwlav = casea_rwlav |> Query.@filter(_.eq_model .== "rIVR") |> DataFrames.DataFrame
 
-    timeylimlow = 0.01
-    timeylim = 180
-
-    ylim1 = 0.003
-    ylim2 = 0.001
-    ylim3 = 0.006
     if which_plot == "time"
         p1 = Plots.scatter([ACP_df_wls.n_bus, ACR_df_wls.n_bus, IVR_df_wls.n_bus], [ACP_df_wls.solve_time, ACR_df_wls.solve_time, IVR_df_wls.solve_time], markershape=[:circle :rect :utriangle], label=["ACP" "ACR" "IVR"], ylabel="Solve time [s]",
-                yscale=:log, legend=false, ylims=(timeylimlow, timeylim), title="WLS")
+                yscale=:log, legend=false, ylims=(ymin, ymax), title="WLS")
         p2 = Plots.scatter([ACP_df_rwls.n_bus, ACR_df_rwls.n_bus, IVR_df_rwls.n_bus], [ACP_df_rwls.solve_time, ACR_df_rwls.solve_time, IVR_df_rwls.solve_time], markershape=[:circle :rect :utriangle], label=["ACP" "ACR" "IVR"],
-                legend=:bottomright, yscale=:log, xlabel="number of buses [-]", ylims=(timeylimlow, timeylim), yaxis=nothing, title="rWLS")
+                legend=:bottomright, yscale=:log, xlabel="number of buses [-]", ylims=(ymin, ymax), yaxis=nothing, title="rWLS")
         p3 = Plots.scatter([ACP_df_rwlav.n_bus, ACR_df_rwlav.n_bus, IVR_df_rwlav.n_bus], [ACP_df_rwlav.solve_time, ACR_df_rwlav.solve_time, IVR_df_rwlav.solve_time], markershape=[:circle :rect :utriangle],   
-                legend=false, yscale=:log, ylims=(timeylimlow, timeylim), yaxis=nothing, title="rWLAV")
+                legend=false, yscale=:log, ylims=(ymin, ymax), yaxis=nothing, title="rWLAV")
         Plots.plot(p1, p2, p3, layout = (1,3))
     elseif which_plot == "error_ph1"
         Plots.scatter([ACR_df_rwlav.n_bus, ACR_df_rwlav.n_bus], [ACR_df_rwlav.err_max_1, ACR_df_rwlav.err_avg_1], markershape=[:circle :utriangle], label=["max. abs. error" "avg. abs. error"], ylabel="Absolute error ϵ [p.u.]", xlabel="Number of buses [-]", 
-                legend=:topright, title="Error plot for case study A - Phase 1", ylims = (0.0, ylim1))
+                legend=:topright, title="Error plot for case study A - Phase 1", ylims = (ymin, ymax))
     elseif which_plot == "error_ph2"
         Plots.scatter([ACR_df_rwlav.n_bus, ACR_df_rwlav.n_bus], [ACR_df_rwlav.err_max_2, ACR_df_rwlav.err_avg_2], markershape=[:circle :utriangle], label=["max. abs. error" "avg. abs. error"], ylabel="Absolute error ϵ [p.u.]", xlabel="Number of buses [-]", 
-                legend=:topright, title="Error plot for case study A - Phase 2", ylims = (0.0, ylim2))
+                legend=:topright, title="Error plot for case study A - Phase 2", ylims = (ymin, ymax))
     elseif which_plot == "error_ph3"
         Plots.scatter([ACR_df_rwlav.n_bus, ACR_df_rwlav.n_bus], [ACR_df_rwlav.err_max_3, ACR_df_rwlav.err_avg_3], markershape=[:circle :utriangle], label=["max. abs. error" "avg. abs. error"], ylabel="Absolute error ϵ [p.u.]", xlabel="Number of buses [-]", 
-                legend=:topright, title="Error plot for case study A - Phase 3", ylims = (0.0, ylim3))
+                legend=:topright, title="Error plot for case study A - Phase 3", ylims = (ymin, ymax))
     else
         display("ERROR: plot type $which_plot in argument `which_plot` not recognized. Possibilities are: \"time\", \"error_ph1\", \"error_ph2\", \"error_ph3\"")
     end

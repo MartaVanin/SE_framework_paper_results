@@ -52,7 +52,6 @@ function run_case_study_D(path_to_csv_result::String, nlsolver; power_base::Floa
 
     # Read-in measurement data and set initial values
     _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 2)
-    _PMDSE.update_all_bounds!(data; v_min = 0.85, v_max = 1.15, pg_min=-1.0, pg_max = 1.0, qg_min=-1.0, qg_max=1.0, pd_min=-1.0, pd_max=1.0, qd_min=-1.0, qd_max=1.0 )
 
     # Set se settings
     data["se_settings"] = Dict{String,Any}("criterion" => "rwlav",
