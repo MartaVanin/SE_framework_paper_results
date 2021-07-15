@@ -31,7 +31,7 @@ function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescale
         short = abbreviation[i]
 
         for criterion in criteria
-            for ntw in 1:25 for fdr in 1:10
+            for ntw in 1:1 for fdr in 1:3
                 data_path = _PMDSE.get_enwl_dss_path(ntw, fdr)
                 if !isdir(dirname(data_path)) break end
 
@@ -71,7 +71,7 @@ function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescale
                 # Read-in measurement data and set initial values
                 _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 2)
                 _PMDSE.assign_start_to_variables!(data)
-                #_PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-1.0, pg_max = 1.0, qg_min=-1.0, qg_max=1.0, pd_min=-1.0, pd_max=1.0, qd_min=-1.0, qd_max=1.0 )
+                #_PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.2)#, pg_min=-1.0, pg_max = 1.0, qg_min=-1.0, qg_max=1.0, pd_min=-1.0, pd_max=1.0, qd_min=-1.0, qd_max=1.0 )
 
                 # Set se settings
                 data["se_settings"] = Dict{String,Any}("criterion" => criterion,

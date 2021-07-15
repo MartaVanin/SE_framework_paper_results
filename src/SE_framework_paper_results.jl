@@ -3,7 +3,7 @@ module SE_framework_paper_results
 import DataFrames, CSV, Distributions, Query
 import PowerModelsDistribution
 import PowerModelsDistributionStateEstimation
-import Plots: savefig
+import Plots: savefig, ylims!, xlims!
 import Plots
 import Random, Statistics
 

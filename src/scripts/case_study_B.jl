@@ -21,8 +21,6 @@ function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set
     # Set solve
     pf_solver = _PMD.optimizer_with_attributes(nlsolver...)
 
-    # ORIGINAL LINEAR SOLVER OPTIONS
-    # lin_se_solver = _PMD.optimizer_with_attributes(Gurobi.Optimizer, "TimeLimit"=>180.0) : pf_solver
     lin_se_solver = _PMD.optimizer_with_attributes(linsolver...)
 
     df = _DF.DataFrame(ntw=Int64[], fdr=Int64[], solve_time=Float64[], n_bus=Int64[],
@@ -74,7 +72,7 @@ function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set
                 # Read-in measurement data and set initial values
                 _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 2)
                 _PMDSE.assign_start_to_variables!(data)
-
+                
                 # Set se settings
                 data["se_settings"] = Dict{String,Any}("criterion" => criterion,
                                         "rescaler" => set_rescaler)
