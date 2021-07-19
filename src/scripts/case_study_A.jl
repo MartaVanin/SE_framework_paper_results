@@ -70,9 +70,9 @@ function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescale
 
                 # Read-in measurement data and set initial values
                 _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 2)
-                # _PMDSE.assign_start_to_variables!(data)
-                #_PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.2)#, pg_min=-1.0, pg_max = 1.0, qg_min=-1.0, qg_max=1.0, pd_min=-1.0, pd_max=1.0, qd_min=-1.0, qd_max=1.0 )
+                _PMDSE.assign_start_to_variables!(data)
 
+                if short != "rIVR" _PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-Inf, pd_min=-Inf) end
                 # Set se settings
                 data["se_settings"] = Dict{String,Any}("criterion" => criterion,
                                         "rescaler" => set_rescaler)
