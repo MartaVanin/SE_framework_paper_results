@@ -1,5 +1,5 @@
 
-function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set_rescaler = 100, power_base::Float64=1e5)
+function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set_rescaler = 100, power_base::Float64=1.0)
 
     # Input data
     models = [_PMD.LinDist3FlowPowerModel, _PMDSE.ReducedIVRUPowerModel]
@@ -57,7 +57,7 @@ function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set
                 σ_v = 1/3*v_max_err/v_pu
             
                 p_pu = data["settings"]["sbase"] # divider [kW] to get the power in per units.
-                p_max_err = 0.01 # maximum error of power measurement = 10W, or 0.01 kW
+                p_max_err = 0.1 # maximum error of power measurement = 100W, or 0.1 kW
                 σ_p = 1/3*p_max_err/p_pu
             
                 # Write measurements based on power flow

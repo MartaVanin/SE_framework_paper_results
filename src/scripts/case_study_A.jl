@@ -1,5 +1,5 @@
 
-function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescaler::Int64 = 100, power_base::Float64=1e5)
+function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescaler::Int64 = 100, power_base::Float64=1.0)
 
     # Input data
     models = [_PMDSE.ReducedIVRUPowerModel, _PMDSE.ReducedACRUPowerModel, _PMDSE.ReducedACPUPowerModel]
@@ -31,7 +31,7 @@ function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescale
         short = abbreviation[i]
 
         for criterion in criteria
-            for ntw in 1:1 for fdr in 1:3
+            for ntw in 1:25 for fdr in 1:10
                 data_path = _PMDSE.get_enwl_dss_path(ntw, fdr)
                 if !isdir(dirname(data_path)) break end
 
@@ -56,7 +56,7 @@ function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescale
                 σ_v = 1/3*v_max_err/v_pu
             
                 p_pu = data["settings"]["sbase"] # divider [kW] to get the power in per units.
-                p_max_err = 0.01 # maximum error of power measurement = 10W, or 0.01 kW
+                p_max_err = 0.1 # maximum error of power measurement = 100W, or 0.1 kW
                 σ_p = 1/3*p_max_err/p_pu
             
                 # Write measurements based on power flow
@@ -70,7 +70,7 @@ function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescale
 
                 # Read-in measurement data and set initial values
                 _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 2)
-                _PMDSE.assign_start_to_variables!(data)
+                # _PMDSE.assign_start_to_variables!(data)
                 #_PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.2)#, pg_min=-1.0, pg_max = 1.0, qg_min=-1.0, qg_max=1.0, pd_min=-1.0, pd_max=1.0, qd_min=-1.0, qd_max=1.0 )
 
                 # Set se settings
