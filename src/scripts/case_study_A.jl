@@ -1,5 +1,5 @@
 
-function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescaler::Int64 = 100, power_base::Float64=1.0)
+function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescaler::Int64 = 100, power_base::Float64=1.0, start::Bool=true, bound::Bool=true, bound_ivr::Bool=true)
 
     # Input data
     models = [_PMDSE.ReducedIVRUPowerModel, _PMDSE.ReducedACRUPowerModel, _PMDSE.ReducedACPUPowerModel]
@@ -70,9 +70,13 @@ function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescale
 
                 # Read-in measurement data and set initial values
                 _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 2)
-                _PMDSE.assign_start_to_variables!(data)
+                if start _PMDSE.assign_start_to_variables!(data) end
 
-                if short != "rIVR" _PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-Inf, pd_min=-Inf) end
+                if bound && short != "rIVR" 
+                    _PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-Inf, pd_min=-Inf) 
+                elseif bound && short == "rIVR"
+                    if bound_ivr _PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-Inf, pd_min=-Inf) end
+                end
                 # Set se settings
                 data["se_settings"] = Dict{String,Any}("criterion" => criterion,
                                         "rescaler" => set_rescaler)

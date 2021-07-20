@@ -1,5 +1,5 @@
 
-function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set_rescaler = 100, power_base::Float64=1.0)
+function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set_rescaler = 100, power_base::Float64=1.0, bound::Bool=true, start::Bool=true)
 
     # Input data
     models = [_PMD.LinDist3FlowPowerModel, _PMDSE.ReducedIVRUPowerModel]
@@ -71,7 +71,8 @@ function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set
 
                 # Read-in measurement data and set initial values
                 _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 2)
-                _PMDSE.assign_start_to_variables!(data)
+                if start _PMDSE.assign_start_to_variables!(data) end
+                if bound _PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-Inf, pd_min=-Inf) end
                 
                 # Set se settings
                 data["se_settings"] = Dict{String,Any}("criterion" => criterion,
