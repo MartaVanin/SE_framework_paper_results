@@ -50,7 +50,9 @@ function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set
 
                 # Solve the power flow
                 pf_results = _PMD.solve_mc_pf(data, _PMD.ACPUPowerModel, pf_solver)
-
+                ref_bus = [b for (b, bus) in data["bus"] if bus["bus_type"] == 3][1]
+                delete!(data["bus"][ref_bus], "vm")
+                
                 # Write measurements based on power flow
                 v_pu = data["settings"]["vbases_default"]["1"]* data["settings"]["voltage_scale_factor"] # divider [V] to get the voltage in per units.
                 v_max_err = 1.15 # maximum error of voltage measurement = 0.5% or 1.15 V
@@ -71,7 +73,7 @@ function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set
 
                 # Read-in measurement data and set initial values
                 _PMDSE.add_measurements!(data, msr_path, actual_meas = true)
-                _SEF.add_errors!(data)
+                _SEF.add_errors!(data, seed = 2)
                 _PMDSE.assign_start_to_variables!(data)
                 _PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.3, pg_min=-Inf, pd_min=-Inf)
                 
