@@ -1,7 +1,7 @@
 
-function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescaler::Int64 = 100, power_base::Float64=1.0, start::Bool=true, bound::Bool=true, bound_ivr::Bool=true)
+function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescaler::Int64 = 100, power_base::Float64=1.0, start::Bool=true)
 
-    # Input data
+    # Input data0
     models = [_PMDSE.ReducedIVRUPowerModel, _PMDSE.ReducedACRUPowerModel, _PMDSE.ReducedACPUPowerModel]
     abbreviation = ["rIVR", "rACR", "rACP"]
     rm_transfo = true
@@ -56,7 +56,7 @@ function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescale
                 σ_v = 1/3*v_max_err/v_pu
             
                 p_pu = data["settings"]["sbase"] # divider [kW] to get the power in per units.
-                p_max_err = 0.1 # maximum error of power measurement = 100W, or 0.1 kW
+                p_max_err = 0.01 # maximum error of power measurement = 10W, or 0.01 kW
                 σ_p = 1/3*p_max_err/p_pu
             
                 # Write measurements based on power flow
@@ -69,14 +69,12 @@ function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescale
                 _PMDSE.write_measurements!(_PMD.ACPUPowerModel, data, pf_results, msr_path, σ= σ_dict)
 
                 # Read-in measurement data and set initial values
-                _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 2)
+                _PMDSE.add_measurements!(data, msr_path, actual_meas = true)
+                _SEF.add_errors!(data)
                 if start _PMDSE.assign_start_to_variables!(data) end
 
-                if bound && short != "rIVR" 
-                    _PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-Inf, pd_min=-Inf) 
-                elseif bound && short == "rIVR"
-                    if bound_ivr _PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-Inf, pd_min=-Inf) end
-                end
+                _PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.4, pg_min=-Inf, pd_min=-Inf) 
+
                 # Set se settings
                 data["se_settings"] = Dict{String,Any}("criterion" => criterion,
                                         "rescaler" => set_rescaler)
@@ -84,7 +82,6 @@ function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescale
                 # Solve the state estimation
                 se_results = _PMDSE.solve_mc_se(data, mod, pf_solver)
                 delta_1, delta_2, delta_3, max_1, max_2, max_3, mean_1, mean_2, mean_3 = _PMDSE.calculate_voltage_magnitude_error_perphase(se_results, pf_results)
-
                 # store result
                 push!(df, [ntw, fdr, se_results["solve_time"], length(data["bus"]),
                         string(se_results["termination_status"]),

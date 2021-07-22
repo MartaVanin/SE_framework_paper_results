@@ -1,5 +1,5 @@
 
-function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set_rescaler = 100, power_base::Float64=1.0, bound::Bool=true, start::Bool=true)
+function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set_rescaler = 100, power_base::Float64=1.0)
 
     # Input data
     models = [_PMD.LinDist3FlowPowerModel, _PMDSE.ReducedIVRUPowerModel]
@@ -57,7 +57,7 @@ function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set
                 σ_v = 1/3*v_max_err/v_pu
             
                 p_pu = data["settings"]["sbase"] # divider [kW] to get the power in per units.
-                p_max_err = 0.1 # maximum error of power measurement = 100W, or 0.1 kW
+                p_max_err = 0.01 # maximum error of power measurement = 10W, or 0.01 kW
                 σ_p = 1/3*p_max_err/p_pu
             
                 # Write measurements based on power flow
@@ -70,9 +70,10 @@ function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set
                 _PMDSE.write_measurements!(_PMD.ACPUPowerModel, data, pf_results, msr_path, σ = σ_dict)
 
                 # Read-in measurement data and set initial values
-                _PMDSE.add_measurements!(data, msr_path, actual_meas = false, seed = 2)
-                if start _PMDSE.assign_start_to_variables!(data) end
-                if bound _PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.2, pg_min=-Inf, pd_min=-Inf) end
+                _PMDSE.add_measurements!(data, msr_path, actual_meas = true)
+                _SEF.add_errors!(data)
+                _PMDSE.assign_start_to_variables!(data)
+                _PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.3, pg_min=-Inf, pd_min=-Inf)
                 
                 # Set se settings
                 data["se_settings"] = Dict{String,Any}("criterion" => criterion,

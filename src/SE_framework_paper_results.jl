@@ -12,6 +12,7 @@ const _DF = DataFrames
 const _DST = Distributions
 const _PMD = PowerModelsDistribution
 const _PMDSE = PowerModelsDistributionStateEstimation
+const _RAN = Random
 const _SEF = SE_framework_paper_results
 const _STT = Statistics
 
