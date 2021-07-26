@@ -1,5 +1,5 @@
 
-function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescaler::Int64 = 100, power_base::Float64=1.0, start::Bool=true)
+function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescaler::Int64 = 100, power_base::Float64=1.0, start::Bool=true, vmin::Float64=0.8, vmax::Float64=1.2)
 
     # Input data0
     models = [_PMDSE.ReducedIVRUPowerModel, _PMDSE.ReducedACRUPowerModel, _PMDSE.ReducedACPUPowerModel]
@@ -73,7 +73,7 @@ function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescale
                 _SEF.add_errors!(data)
                 if start _PMDSE.assign_start_to_variables!(data) end
 
-                _PMDSE.update_all_bounds!(data; v_min = 0.8, v_max = 1.4, pg_min=-Inf, pd_min=-Inf) 
+                _PMDSE.update_all_bounds!(data; v_min = vmin, v_max = vmax, pg_min=-Inf, pd_min=-Inf) 
 
                 # Set se settings
                 data["se_settings"] = Dict{String,Any}("criterion" => criterion,
