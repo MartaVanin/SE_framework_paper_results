@@ -1,3 +1,6 @@
+################################################################################
+#  Copyright 2021, Marta Vanin                                                 #
+################################################################################
 module SE_framework_paper_results
 
 import DataFrames, CSV, Distributions, Query

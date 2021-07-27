@@ -1,5 +1,7 @@
-
-function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescaler::Int64 = 100, power_base::Float64=1.0, start::Bool=true, vmin::Float64=0.8, vmax::Float64=1.2)
+################################################################################
+#  Copyright 2021, Marta Vanin                                                 #
+################################################################################
+function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescaler::Int64 = 1000, power_base::Float64=1.0, start::Bool=true, vmin::Float64=0.7, vmax::Float64=1.3)
 
     # Input data0
     models = [_PMDSE.ReducedIVRUPowerModel, _PMDSE.ReducedACRUPowerModel, _PMDSE.ReducedACPUPowerModel]

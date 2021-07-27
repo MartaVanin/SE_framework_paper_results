@@ -1,5 +1,7 @@
-
-function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set_rescaler = 100, power_base::Float64=1.0)
+################################################################################
+#  Copyright 2021, Marta Vanin                                                 #
+################################################################################
+function run_case_study_B(path_to_result_csv, nlsolver::Any, linsolver::Any; set_rescaler = 1000, power_base::Float64=1.0)
 
     # Input data
     models = [_PMD.LinDist3FlowPowerModel, _PMDSE.ReducedIVRUPowerModel]

@@ -1,3 +1,6 @@
+################################################################################
+#  Copyright 2021, Marta Vanin                                                 #
+################################################################################
 function run_case_study_E(nlsolver)
 
     season = "winter"
@@ -54,10 +57,10 @@ function run_case_study_E(nlsolver)
     ###############################################################
 
     bad_data_lav = deepcopy(data)
-    bad_data_lav["meas"]["43"]["dst"] = [_DST.Normal(0.019, σ_p)]
-    bad_data_lav["meas"]["53"]["dst"] = [_DST.Normal(0.01, σ_p)]
-    bad_data_lav["meas"]["33"]["dst"] = [_DST.Normal(1.01, σ_v)]
-
+    _SEF.add_some_noise!(bad_data_lav)
+    bad_data_lav["meas"]["43"]["dst"] = [_DST.Normal(0.019, σ_p)] # This is P_5 in the paper
+    bad_data_lav["meas"]["53"]["dst"] = [_DST.Normal(0.01, σ_p)] # This is Q_27 in the paper
+    bad_data_lav["meas"]["33"]["dst"] = [_DST.Normal(1.01, σ_v)] #This is U_8 in the paper
     bad_data_chi = deepcopy(bad_data_lav)
     bad_data_lnr = deepcopy(bad_data_lav)
 

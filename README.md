@@ -1,8 +1,10 @@
 This repository contains results and example scripts for the paper:
 
-"A Framework for Constrained Static State Estimation in Unbalanced Distribution Networks"
+"A Framework for Constrained Static State Estimation in Unbalanced Distribution Networks" by M. Vanin, T. Van Acker, R. D'hulst and D. Van Hertem.
 
 If you are looking for the general open-source state estimation framework package instead, that's [here](https://github.com/Electa-Git/PowerModelsDistributionStateEstimation.jl).
+
+This code has a BSD-3 clause license.
 
 ## Producing and comparing the results
 
@@ -14,7 +16,7 @@ Feel free to contact me in case of doubts or mistakes.
 
 ## Installation
 
-*Please use Julia v1.6*
+*Please use Julia version 1.6*
 
 This repository takes the form of a (non-registered) julia package, and can be installed from the package manager, i.e., copy-pasting the following in the julia REPL:
 ```
@@ -45,22 +47,23 @@ nlsolver = (Ipopt.Optimizer, "max_cpu_time"=>180.0, "tol"=>1e-10, "print_level"=
 _SEF.run_case_study_A(csv_result_path, nlsolver)
 ```
 (of course, you need to be in the environment where the packages are installed in order to use them).
-Note that some of the case studies run on > 100 networks, and therefore take a while.
+Note that some of the case studies run on > 100 networks, and therefore might take a while.
 The result of case studies A to D are csv files, to be found in the user-defined path. 
 
 *Note on case study E:*
-Case study E's output is not a csv but is printed in the REPL. Please ignore the estimation criterion warnings in the REPL.
+Since there is no plot associated with it, case study E's output is not a csv but is printed in the REPL. Please ignore the estimation criterion warnings in the REPL.
 
 ### Arguments for case study functions
 
 Script functions `run_case_study_*` have some "compulsory" and some "optional" arguments. In the function definitions within `src/scripts`, these are separated by a semicolon. Compulsory arguments have to be provided by the user. Optional arguments can be provided by the user, and otherwise take the default value assigned in the function definition. For example, the definition of `run_case_study_A` is:
 ```
-function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescaler::Int64 = 100, power_base::Float64=1e5)
+run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescaler::Int64 = 1000, power_base::Float64=1.0, start::Bool=true, vmin::Float64=0.7, vmax::Float64=1.3)
 ```
 where
 - `path_to_result_csv`, and `solver` are compulsory arguments, whereas,
-- `set_rescaler` and `power_base` are optional and have as default value `100` and `1e5`, respectively.
+- `set_rescaler` and `power_base` are optional and have as default value `1000` and `1.0`, respectively, and so on for `start`, `vmin` and `vmax`.
 
+To produce the results in `/paper_results`, the default values of the optional arguments are used.
 Below, an explanation of all the arguments of all the case study functions (not all arguments are needed in all functions, e.g., `linsolver` is not used in `run_case_study_A`, where there are no linear optimization problems). Please have a look at the source code and at the section below to see which functions uses which arguments:
 
 - `path_to_result_csv`: Path where the csv file with the results is created and stored. It needs to be a string!
@@ -68,29 +71,20 @@ Below, an explanation of all the arguments of all the case study functions (not 
 - `linsolver`: Solver (with settings) for the linear SE problems. It needs to have the form (Ipopt.Optimizer, "print_level"=>0), i.e., wrapped in brackets and with at least one setting.
 - `set_rescaler`: Scalar value that rescales ALL weights (see the package manual). It has the potential to speed up calculations without affecting the results. It has to be an Integer!
 - `power_base`: Scalar value which is used to convert the power and impedance values in per unit. It has to be a Float!
+- `vmin`, `vmax`: Lower and upper bounds on voltages, Floats.
+- `start`: Boolean that states whether start values are used for SE calculations. If `true`, start values of the variables equal their measured value (i.e., with errors).
 
-### Argument values used in the original paper calculations
+### Solver set-up
 
-See the paper for the software versions and machine specifications.
-The settings used are the following:
-
-**Case C:**
+The following solver settings are used:
 ```julia
-using Ipopt, Gurobi, SE_framework_paper_results
 nlsolver = (Ipopt.Optimizer, "max_cpu_time"=>180.0, "tol"=>1e-8, "print_level"=>0, "linear_solver"=>"MA27")
 linsolver = (Gurobi.Optimizer, "TimeLimit"=>180.0)
-run_case_study_C(path, nlsolver, linsolver; power_base=100)
-```
-
-**Case E::**
-```julia
-using Ipopt, SE_framework_paper_results
-run_case_study_E((Ipopt.Optimizer, "max_cpu_time"=>180.0, "tol"=>1e-10, "print_level"=>0))
 ```
 
 *NOTES*:
 1) Case study B and C work best with Gurobi. However, if you do not have a license, it can be set to call back to ipopt, even though the latter is not the fastest linear program solver. 
-2) Ipopt needs and underlying linear solver. The default one is "mumps", while the recommended one to solve these se problems is "ma27", by HSL. However, this also requires a license. If the user does not have it, they can set `lin_sol` to "mumps"
+2) Ipopt needs and underlying linear solver. The default one is "mumps", while the recommended one to solve these se problems is "ma27", by HSL. However, this also requires a license. If the user does not have it, they should set `"linear_solver"` to "mumps" or remove the `"linear_solver"` attribute altogether.
 
 ## Plot the results
 
@@ -106,6 +100,3 @@ To save the last produced plot to your machine, you can use the savefig function
 Of course, you can produce your own results and plot those, as running case studies automatically returns a csv file which is compatible with the plotting functions.
 
 Some case studies, like case study C and D, only have one plot (like in the paper), i.e., solve time or measurement errors. In the case of cases with multiple possible plots, users can specify which ones they want via the second function argument.
-
-
-TODO!!! default y limits

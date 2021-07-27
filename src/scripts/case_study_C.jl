@@ -1,4 +1,7 @@
-function run_case_study_C(path_to_result_csv, nlsolver, linsolver; set_rescaler = 100, power_base::Float64=1e5)
+################################################################################
+#  Copyright 2021, Marta Vanin                                                 #
+################################################################################
+function run_case_study_C(path_to_result_csv, nlsolver, linsolver; set_rescaler = 100, power_base::Float64=100.0)
 
     # Input data
     rm_transfo = true

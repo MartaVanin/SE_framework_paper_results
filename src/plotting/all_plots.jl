@@ -1,14 +1,6 @@
-"""
-Default ylims values:
-For "time" plot
-ymin: 0.01, ymax: 180
-For "error_ph1"
-ymin:0.0, ymax:0.003
-For "error_ph2"
-ymin:0.0, ymax:0.001
-For "error_ph3"
-ymin:0.0, ymax:0.006
-"""
+################################################################################
+#  Copyright 2021, Marta Vanin                                                 #
+################################################################################
 function plot_result_caseA(path_to_caseA_csv::String, which_plot::String, ymin::Float64, ymax::Float64)
 
     casea = CSV.read(path_to_caseA_csv)

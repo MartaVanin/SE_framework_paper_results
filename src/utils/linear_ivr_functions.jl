@@ -1,3 +1,6 @@
+################################################################################
+#  Copyright 2021, Marta Vanin                                                 #
+################################################################################
 "solves the reduced state estimation in current and voltage rectangular coordinates (ReducedIVR formulation)"
 function run_linear_ivr_red_mc_se(data::Union{Dict{String,<:Any},String}, solver; kwargs...)
     return run_mc_selin(data, PowerModelsDistributionStateEstimation.ReducedIVRUPowerModel, solver; kwargs...)

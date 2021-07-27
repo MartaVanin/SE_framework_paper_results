@@ -1,3 +1,6 @@
+################################################################################
+#  Copyright 2021, Marta Vanin                                                 #
+################################################################################
 function run_case_study_D(path_to_csv_result::String, nlsolver; power_base::Float64=1e5, rsc::Int64=100)
 
     # Input data
