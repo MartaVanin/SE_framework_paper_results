@@ -1,14 +1,11 @@
 ################################################################################
 #  Copyright 2021, Marta Vanin                                                 #
 ################################################################################
-function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescaler::Int64 = 1000, power_base::Float64=1.0, start::Bool=true, vmin::Float64=0.7, vmax::Float64=1.3)
+function run_case_study_A(path_to_result_csv::String, nlsolver::Any; models::Array=[_PMDSE.ReducedIVRUPowerModel, _PMDSE.ReducedACRUPowerModel, _PMDSE.ReducedACPUPowerModel], abbreviation::Array = ["rIVR", "rACR", "rACP"], criteria::Array=["rwlav", "wls", "rwls"], set_rescaler::Int64 = 1000, power_base::Float64=1.0, start::Bool=true, vmin::Float64=0.7, vmax::Float64=1.3)
 
-    # Input data0
-    models = [_PMDSE.ReducedIVRUPowerModel, _PMDSE.ReducedACRUPowerModel, _PMDSE.ReducedACPUPowerModel]
-    abbreviation = ["rIVR", "rACR", "rACP"]
+    # Input data
     rm_transfo = true
     rd_lines = true
-    criteria = ["rwlav", "wls", "rwls"]
 
     season = "summer"
     time_step = 144
@@ -82,7 +79,7 @@ function run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescale
                                         "rescaler" => set_rescaler)
 
                 # Solve the state estimation
-                se_results = _PMDSE.solve_mc_se(data, mod, pf_solver)
+                se_results = _PMDSE.solve_mc_se(data, _PMDSE.ReducedIVRUPowerModel, pf_solver)
                 delta_1, delta_2, delta_3, max_1, max_2, max_3, mean_1, mean_2, mean_3 = _PMDSE.calculate_voltage_magnitude_error_perphase(se_results, pf_results)
                 # store result
                 push!(df, [ntw, fdr, se_results["solve_time"], length(data["bus"]),
