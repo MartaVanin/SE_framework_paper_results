@@ -57,13 +57,15 @@ Since there is no plot associated with it, case study E's output is not a csv bu
 
 Script functions `run_case_study_*` have some "compulsory" and some "optional" arguments. In the function definitions within `src/scripts`, these are separated by a semicolon. Compulsory arguments have to be provided by the user. Optional arguments can be provided by the user, and otherwise take the default value assigned in the function definition. For example, the definition of `run_case_study_A` is:
 ```
-run_case_study_A(path_to_result_csv::String, nlsolver::Any; set_rescaler::Int64 = 1000, power_base::Float64=1.0, start::Bool=true, vmin::Float64=0.7, vmax::Float64=1.3)
+run_case_study_A(path_to_result_csv::String, nlsolver::Any; models::Array=[_PMDSE.ReducedIVRUPowerModel, _PMDSE.ReducedACRUPowerModel, _PMDSE.ReducedACPUPowerModel], ...)
 ```
 where
 - `path_to_result_csv`, and `solver` are compulsory arguments, whereas,
-- `set_rescaler` and `power_base` are optional and have as default value `1000` and `1.0`, respectively, and so on for `start`, `vmin` and `vmax`.
+- `set_rescaler` and `power_base` are optional and have as default value `1000` and `1.0`, respectively, and so on for `start`, `vmin`, `vmax`, etc..
 
-To produce the results in `/paper_results`, the default values of the optional arguments are used.
+Using the default values of the optional arguments will solve most of the networks for all formulations and criteria, but there will be exceptions with numerical issues, especially with the "wls" criterion. In practice, since the "wls" and the "rwls" are equivalent, the user should in general probably just use the "rwls".
+Changing the optional values, e.g., start value, bounds, but particularly the `set_rescaler` and `power_base` can improve convergence a lot. In general, different networks with different characteristics might prefer different settings, and trying to force the same settings to all networls as we do in this exercise is probably not the best way to go. To produce `case_A.csv`, for a minority of feeders with the wls criterion, different rescalers and power bases have been used, as can be seen in the csv file itself.
+
 Below, an explanation of all the arguments of all the case study functions (not all arguments are needed in all functions, e.g., `linsolver` is not used in `run_case_study_A`, where there are no linear optimization problems). Please have a look at the source code and at the section below to see which functions uses which arguments:
 
 - `path_to_result_csv`: Path where the csv file with the results is created and stored. It needs to be a string!
@@ -73,6 +75,9 @@ Below, an explanation of all the arguments of all the case study functions (not 
 - `power_base`: Scalar value which is used to convert the power and impedance values in per unit. It has to be a Float!
 - `vmin`, `vmax`: Lower and upper bounds on voltages, Floats.
 - `start`: Boolean that states whether start values are used for SE calculations. If `true`, start values of the variables equal their measured value (i.e., with errors).
+- `models`: array that contains the different exact SE formulations for case study A: ACR, ACP and IVR. The user can pass a subset of the default set,
+- `abbreviations`: array of strings that contains the abbreviations of the formulations in `models`, to be written in the result csv file,
+- `criteria`: wls, rwlas and rwlav or a subset of these, i.e., the SE objective.  
 
 ### Solver set-up
 
